@@ -92,8 +92,8 @@ class WeatherBot():
                     pokemon_despawn_time.append(time_disppear)
                 if len(found_weather) == 2:
                     break
-        #for w, ts in zip(found_weather, pokemon_despawn_time):
-        #    print("Weather: %s Time stamp: %s" % (w, ts))
+        for w, ts in zip(found_weather, pokemon_despawn_time):
+            print("Weather: %s Time stamp: %s" % (w, ts))
             
         in_game_weater = None
         if len(found_weather) == 1:
@@ -271,7 +271,7 @@ class WeatherBot():
             
         self.bot.run_discord_bot(self.bot_token)
 
-weather_bot = WeatherBot("/home/pjdrm/eclipse-workspace/TeamRocketSpy/src/private_weather_bot_config.json")
+weather_bot = WeatherBot("./private_weather_bot_config.json")
 #weather_bot.run_discord_bot()
     
     
