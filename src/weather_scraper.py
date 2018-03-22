@@ -22,7 +22,7 @@ import time
 
 class WeatherBot():
     
-    def __init__(self, config, log_file="./forecast_log.txt", report_log_file="./report_forecast_log.txt"):
+    def __init__(self, config, log_file="./forecast_log.txt", report_log_file="./report_forecast_log.txt", run_d_bot=False):
         self.report_log_file = report_log_file
         with open(config) as config_file:
             config_dict = json.load(config_file)
@@ -35,15 +35,18 @@ class WeatherBot():
         for key in self.weather_consts:
             emoji = self.weather_consts[key]["emoji"]
             self.emoji_dict[emoji] = key
-        self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
         self.weather_forecast = {}
         self.cached_weather_forecast = self.load_forecast_cache(self.log_file)
         self.scrape_weather()
-        #self.get_in_game_weather()
+        self.get_in_game_weather()
+        if run_d_bot:
+            self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
+            self.run_discord_bot()
     
     def get_in_game_weather(self):
+        threading.Timer(3500, self.get_in_game_weather).start()
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
@@ -59,16 +62,16 @@ class WeatherBot():
             #print ii.tag_name
             if "cancel" == ii.get_attribute('id'):
                 ii.click()
-                print("Clicked Cancel")
+                #print("Clicked Cancel")
         
         driver.switch_to.default_content()
         driver.find_elements_by_xpath('//*[@class="confirm"]')[0].click()
-        print("Clicked Ok")
+        #print("Clicked Ok")
         
         found_weather = []
         pokemon_despawn_time = []
-        for i in range(40, 100):
-            possible_pokemon_wb = driver.find_elements_by_xpath('//*[@id="map"]/div/div/div[1]/div[3]/div[2]/div[3]/div['+str(i)+']')
+        for i in range(3, 100):
+            possible_pokemon_wb = driver.find_elements_by_xpath('//*[@id="map"]/div/div/div[1]/div[3]/div[2]/div[3]/div[@class]['+str(i)+']')
             if len(possible_pokemon_wb) == 0:
                 break
             else:
@@ -77,9 +80,9 @@ class WeatherBot():
             hover.perform()
             time.sleep(.1)
             poke_pop_up = driver.find_elements_by_xpath('//*[@class="pokemon weather-boost"]')
-            poke_name = driver.find_elements_by_xpath('//*[@class="pokemon name"]')[0].text
-            if len(poke_name):
-                print("Checking weather for %s" % poke_name)
+            #poke_name = driver.find_elements_by_xpath('//*[@class="pokemon name"]')[0].text
+            #if len(poke_name):
+            #    print("Checking weather for %s" % poke_name)
             if len(poke_pop_up) > 0 and len(poke_pop_up[0].text) > 0:
                 weather = poke_pop_up[0].text
                 time_disppear = driver.find_elements_by_xpath('//*[@class="pokemon disappear"]')[0].text
@@ -89,26 +92,29 @@ class WeatherBot():
                     pokemon_despawn_time.append(time_disppear)
                 if len(found_weather) == 2:
                     break
-        for w, ts in zip(found_weather, pokemon_despawn_time):
-            print("Weather: %s Time stamp: %s" % (w, ts))
+        #for w, ts in zip(found_weather, pokemon_despawn_time):
+        #    print("Weather: %s Time stamp: %s" % (w, ts))
             
         in_game_weater = None
         if len(found_weather) == 1:
-            print("Only found weather condition\n")
+            #print("Only found weather condition\n")
             in_game_weater = found_weather[0]
             
         else:
-            ts1 = dt.strptime(pokemon_despawn_time[0],'%HH:%MM')
-            ts2 = dt.strptime(pokemon_despawn_time[1],'%HH:%MM')
-            print("Found two weather conditions\n")
+            ts1 = dt.strptime(pokemon_despawn_time[0],'%H:%M')
+            ts2 = dt.strptime(pokemon_despawn_time[1],'%H:%M')
+            #print("Found two weather conditions")
             if ts1.time() > ts2.time():
                 in_game_weater = found_weather[0]
             else:
                 in_game_weater = found_weather[1]
-        print("In-game weather: %s" % in_game_weater)
+        
+        time_stamp = dt.now()
+        print("Scrape time stamp: %s In-game weather: %s" % (time_stamp.strftime('%H:%M'), in_game_weater))
         with open(self.report_log_file, "a+") as f:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
             f.write(time_stamp+" "+in_game_weater+"\n")
+        driver.close()
                 
         
     def get_hour_forecast(self, driver, h):
@@ -182,6 +188,7 @@ class WeatherBot():
         self.cached_weather_forecast.append((current_time_stamp, copy.deepcopy(self.weather_forecast)))
         self.cached_weather_forecast = self.cached_weather_forecast[-5:]
         print("Scrape time stamp: %s" % (current_time_stamp.strftime('%H:%M')))
+        driver.close()
         
     def get_debug_weather_reports(self, h):
         debug_pogo_weather1 = ""
@@ -239,7 +246,7 @@ class WeatherBot():
         '''
         return embed
     
-    def run(self):
+    def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
             print('WeatherBot Ready')
@@ -262,9 +269,9 @@ class WeatherBot():
                 resp = "Obrigado pelo report"
             await self.bot.say(resp)
             
-        self.bot.run(self.bot_token)
+        self.bot.run_discord_bot(self.bot_token)
 
 weather_bot = WeatherBot("/home/pjdrm/eclipse-workspace/TeamRocketSpy/src/private_weather_bot_config.json")
-weather_bot.run()
+#weather_bot.run_discord_bot()
     
     
