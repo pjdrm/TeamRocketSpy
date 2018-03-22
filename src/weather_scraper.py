@@ -70,7 +70,7 @@ class WeatherBot():
         
         found_weather = []
         pokemon_despawn_time = []
-        for i in range(3, 100):
+        for i in range(3, 400):
             possible_pokemon_wb = driver.find_elements_by_xpath('//*[@id="map"]/div/div/div[1]/div[3]/div[2]/div[3]/div[@class]['+str(i)+']')
             if len(possible_pokemon_wb) == 0:
                 break
@@ -95,25 +95,28 @@ class WeatherBot():
         for w, ts in zip(found_weather, pokemon_despawn_time):
             print("Weather: %s Time stamp: %s" % (w, ts))
             
-        in_game_weater = None
-        if len(found_weather) == 1:
-            #print("Only found weather condition\n")
-            in_game_weater = found_weather[0]
-            
-        else:
-            ts1 = dt.strptime(pokemon_despawn_time[0],'%H:%M')
-            ts2 = dt.strptime(pokemon_despawn_time[1],'%H:%M')
-            #print("Found two weather conditions")
-            if ts1.time() > ts2.time():
+        if len(found_weather) > 0:
+            in_game_weater = None
+            if len(found_weather) == 1:
+                #print("Only found weather condition\n")
                 in_game_weater = found_weather[0]
+                
             else:
-                in_game_weater = found_weather[1]
-        
-        time_stamp = dt.now()
-        print("Scrape time stamp: %s In-game weather: %s" % (time_stamp.strftime('%H:%M'), in_game_weater))
-        with open(self.report_log_file, "a+") as f:
-            time_stamp = dt.now().strftime("%m-%d %H:%M")
-            f.write(time_stamp+" "+in_game_weater+"\n")
+                ts1 = dt.strptime(pokemon_despawn_time[0],'%H:%M')
+                ts2 = dt.strptime(pokemon_despawn_time[1],'%H:%M')
+                #print("Found two weather conditions")
+                if ts1.time() > ts2.time():
+                    in_game_weater = found_weather[0]
+                else:
+                    in_game_weater = found_weather[1]
+            
+            time_stamp = dt.now()
+            print("Scrape time stamp: %s In-game weather: %s" % (time_stamp.strftime('%H:%M'), in_game_weater))
+            with open(self.report_log_file, "a+") as f:
+                time_stamp = dt.now().strftime("%m-%d %H:%M")
+                f.write(time_stamp+" "+in_game_weater+"\n")
+        else:
+            print("WARNING: could not scrape weather")
         driver.close()
                 
         
