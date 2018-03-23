@@ -19,8 +19,7 @@ class RaidReportBot():
         for channel in self.bot.get_all_channels():
             print(channel.name)
         channel = discord.utils.find(lambda c: c.name==channel_name, self.bot.get_all_channels())
-        messages = self.bot.logs_from(channel, limit=500)
-        for message in messages:
+        async for message in self.bot.logs_from(channel, limit=500):
             print("ECHO : " + message.clean_content)
     
     def run_discord_bot(self):
