@@ -20,7 +20,8 @@ class RaidReportBot():
             print(channel.name)
         channel = discord.utils.find(lambda c: c.name==channel_name, self.bot.get_all_channels())
         async for message in self.bot.logs_from(channel, limit=500):
-            print("ECHO : " + message.clean_content)
+            if len(message.embeds) > 0:
+                print("Title: %s Desc: %s\n" % (message.embeds[0]["description"], message.embeds[0]["title"]))
     
     def run_discord_bot(self):
         @self.bot.event
