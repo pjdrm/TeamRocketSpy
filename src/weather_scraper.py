@@ -14,10 +14,6 @@ import threading
 import copy
 
 from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 import time
 
 class WeatherBot():
@@ -272,9 +268,6 @@ class WeatherBot():
                 resp = "Obrigado pelo report"
             await self.bot.say(resp)
             
-        self.bot.run_discord_bot(self.bot_token)
+        self.bot.run(self.bot_token)
 
-weather_bot = WeatherBot("./private_weather_bot_config.json")
-#weather_bot.run_discord_bot()
-    
-    
+weather_bot = WeatherBot("./private_weather_bot_config.json", run_d_bot=True)
