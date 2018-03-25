@@ -11,13 +11,17 @@ import unicodedata
 class RaidReportBot():
     
     def __init__(self):
-        self.active_raids = {}
+        self.issued_raids = {}
+        self.active_raids = self.load_existing_raids()
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
         self.bot_token = "NDIyODM5NTgzODc3NjI3OTA1.DYhnlA.Ax_cAy7J4KoPHbD-vjApwC_4l6c"
         self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
         self.run_discord_bot()
+    
+    def load_existing_raids(self):
+        return {} #TODO: actually crawl list of existing channels to get active raids
     
     def load_gyms(self, gyms_file, region_map):
         gyms_json = json.load(open(gyms_file))
@@ -69,7 +73,7 @@ class RaidReportBot():
                     raid_command = self.get_create_raid_command(raid_info)
                     regional_channel = self.get_regional_channel(raid_info["gym_name"])
                     disc_channel = self.regional_channel_dict[regional_channel]
-                    print(raid_command + " " + self.get_gym_channel_name(raid_info["gym_name"]))
+                    print(raid_command + " " + self.gym_name_2_raid_channel_name_short(raid_info["gym_name"]))
                     #await self.bot.send_message(disc_channel, raid_command)
         self.check_if_gyms_exist(gyms_to_check)
                 
@@ -105,43 +109,64 @@ class RaidReportBot():
         create_raid_command += " " + raid_info["gym_name"]
         return create_raid_command
     
-    def get_gym_channel_name(self, gym_name):
+    def gym_name_2_raid_channel_name_short(self, gym_name):
         gym_id = self.gyms[gym_name]
         if gym_id in self.gyms_meta_data and "nickname" in self.gyms_meta_data[gym_id]:
-            gym_channel_name = self.gyms_meta_data[gym_id]["nickname"]
+            raid_channel_name = self.gyms_meta_data[gym_id]["nickname"]
         else:
-            gym_channel_name = gym_name
-        gym_channel_name = str(unicodedata.normalize('NFKD', gym_channel_name).encode('ASCII', 'ignore'))
-        gym_channel_name = gym_channel_name.replace("/", "-").replace("(", "").replace(")", "").replace(" ", "-").lower()
-        return gym_channel_name
+            raid_channel_name = gym_name
+        raid_channel_name = str(unicodedata.normalize('NFKD', raid_channel_name).encode('ASCII', 'ignore'))
+        raid_channel_name = raid_channel_name.replace("/", "-").replace("(", "").replace(")", "").replace(" ", "-").lower()
+        return raid_channel_name
+    
+    def channel_2_raid_channel_name_short(self, channel):
+        raid_channel_name_short = channel.name
+        if raid_channel_name_short.startswith_fws("tier"):
+            raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
+        else:
+            raid_channel_name_short = raid_channel_name_short.split("-")[1:]
+            raid_channel_name_short = raid_channel_name_short.join("-")
+        return raid_channel_name_short
+    
+    def get_gym_channel(self, raid_channel_name):
+        return self.active_raids[raid_channel_name]
     
     def add_active_raid(self, channel):
-        raid_channel_name = channel.name
-        if raid_channel_name.startswith_fws("tier"):
-            raid_channel_name = raid_channel_name.split("tier-")[1][2:]
-        else:
-            raid_channel_name = raid_channel_name.split("-")[1:]
-            raid_channel_name = raid_channel_name.join("-")
+        raid_channel_name = self.channel_2_raid_channel_name_short(channel)
+            
         if raid_channel_name not in self.active_raids:
             self.active_raids[raid_channel_name] = channel
             
-    async def create_raid(self, raid_info):
-        gym_channel_name = self.get_gym_channel_name(raid_info["gym_name"])
-        if gym_channel_name in self.active_raids:
-            #Check if egg hatched
-            a = 0
-        else:
-            regional_channel = self.get_regional_channel(raid_info["gym_name"])
-            disc_channel = self.regional_channel_dict[regional_channel]
-            create_raid_command = self.get_create_raid_command(raid_info)
-            await self.bot.send_message(disc_channel, create_raid_command)
-            gym_channel = self.active_raids[gym_channel_name] #TODO: Probably need to wait Pine actually creates channel
+        if raid_channel_name in self.issued_raids:
+            gym_channel = self.get_gym_channel(raid_channel_name)
+            raid_info = self.issued_raids[raid_channel_name]
             time_command = ""
             if raid_info["hatched"]:
                 time_command = "!left " + raid_info["raid_ends_in"]
             else:
                 time_command = "!hatch " + raid_info["raid_starts_in"] 
             await self.bot.send_message(gym_channel, time_command)
+            self.issued_raids.pop(raid_channel_name)
+    
+    def remove_active_raid(self, channel):
+        rc_short_name = self.channel_2_raid_channel_name_short(channel)
+        self.active_raids.pop(rc_short_name)
+            
+    def report_raid(self, gym_channel_name, raid_info):
+        self.issued_raids[gym_channel_name] = raid_info
+        
+    async def create_raid(self, raid_info):
+        raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
+        if raid_channel_name in self.active_raids and raid_info["hatched"]:
+            gym_channel = self.get_gym_channel(raid_channel_name)
+            if gym_channel.name.startswith(("tier")):
+                await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
+        else:
+            regional_channel = self.get_regional_channel(raid_info["gym_name"])
+            disc_channel = self.regional_channel_dict[regional_channel]
+            create_raid_command = self.get_create_raid_command(raid_info)
+            self.report_raid(raid_channel_name, raid_info)
+            await self.bot.send_message(disc_channel, create_raid_command)
             
     def run_discord_bot(self):
         @self.bot.event
@@ -159,6 +184,11 @@ class RaidReportBot():
         async def on_channel_create(channel):
             print("New Raid created %s" % channel.name)
             self.add_active_raid(channel.name)
+            
+        @self.bot.event
+        async def on_channel_delete(channel):
+            print("Raid Ended created %s" % channel.name)
+            self.remove_active_raid(channel)
                 
         self.bot.run(self.bot_token)
 
