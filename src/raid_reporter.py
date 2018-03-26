@@ -65,7 +65,7 @@ class RaidReportBot():
         #    print(channel.name)
         channel = discord.utils.find(lambda c: c.name==channel_name, self.bot.get_all_channels())
         gyms_to_check = []
-        async for message in self.bot.logs_from(channel, limit=500):
+        async for message in self.bot.logs_from(channel, limit=1):
             if len(message.embeds) > 0:
                 raid_info = self.parse_raid_message(message.embeds[0])
                 if raid_info["gym_name"] in self.gyms:
@@ -75,6 +75,7 @@ class RaidReportBot():
                     disc_channel = self.regional_channel_dict[regional_channel]
                     print(raid_command + " " + self.gym_name_2_raid_channel_name_short(raid_info["gym_name"]))
                     #await self.bot.send_message(disc_channel, raid_command)
+                    await self.create_raid(raid_info)
         self.check_if_gyms_exist(gyms_to_check)
                 
     def parse_raid_message(self, raid_embed):
@@ -131,7 +132,7 @@ class RaidReportBot():
     def get_gym_channel(self, raid_channel_name):
         return self.active_raids[raid_channel_name]
     
-    def add_active_raid(self, channel):
+    async def add_active_raid(self, channel):
         raid_channel_name = self.channel_2_raid_channel_name_short(channel)
             
         if raid_channel_name not in self.active_raids:
@@ -174,11 +175,6 @@ class RaidReportBot():
             print('RaidReportBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             await self.read_channel_messages("raid-spotter")
-        
-        @self.bot.event
-        async def on_message(message):
-            if message.author != self.bot.user:
-                await self.bot.send_message(message.channel, "ECHO: "+message.content)
         
         @self.bot.event
         async def on_channel_create(channel):
