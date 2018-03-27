@@ -7,6 +7,8 @@ import discord
 from discord.ext import commands
 import json
 import unicodedata
+from logging.config import thread
+import time
 
 class RaidReportBot():
     
@@ -65,17 +67,16 @@ class RaidReportBot():
         #    print(channel.name)
         channel = discord.utils.find(lambda c: c.name==channel_name, self.bot.get_all_channels())
         gyms_to_check = []
-        async for message in self.bot.logs_from(channel, limit=1):
+        raid_alerts = []
+        async for message in self.bot.logs_from(channel, limit=100):
             if len(message.embeds) > 0:
                 raid_info = self.parse_raid_message(message.embeds[0])
                 if raid_info["gym_name"] in self.gyms:
+                    raid_alerts.append(raid_info)
                     gyms_to_check.append(raid_info["gym_name"])
                     raid_command = self.get_create_raid_command(raid_info)
-                    regional_channel = self.get_regional_channel(raid_info["gym_name"])
-                    disc_channel = self.regional_channel_dict[regional_channel]
                     print(raid_command + " " + self.gym_name_2_raid_channel_name_short(raid_info["gym_name"]))
-                    #await self.bot.send_message(disc_channel, raid_command)
-                    await self.create_raid(raid_info)
+        await self.create_raid(raid_alerts[0])
         self.check_if_gyms_exist(gyms_to_check)
                 
     def parse_raid_message(self, raid_embed):
@@ -116,13 +117,13 @@ class RaidReportBot():
             raid_channel_name = self.gyms_meta_data[gym_id]["nickname"]
         else:
             raid_channel_name = gym_name
-        raid_channel_name = str(unicodedata.normalize('NFKD', raid_channel_name).encode('ASCII', 'ignore'))
+        raid_channel_name = unicodedata.normalize('NFKD', raid_channel_name)
         raid_channel_name = raid_channel_name.replace("/", "-").replace("(", "").replace(")", "").replace(" ", "-").lower()
         return raid_channel_name
     
     def channel_2_raid_channel_name_short(self, channel):
         raid_channel_name_short = channel.name
-        if raid_channel_name_short.startswith_fws("tier"):
+        if raid_channel_name_short.startswith("tier"):
             raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
         else:
             raid_channel_name_short = raid_channel_name_short.split("-")[1:]
@@ -138,15 +139,17 @@ class RaidReportBot():
         if raid_channel_name not in self.active_raids:
             self.active_raids[raid_channel_name] = channel
             
-        if raid_channel_name in self.issued_raids:
+        if raid_channel_name in self.issued_raids.keys():
             gym_channel = self.get_gym_channel(raid_channel_name)
             raid_info = self.issued_raids[raid_channel_name]
             time_command = ""
             if raid_info["hatched"]:
                 time_command = "!left " + raid_info["raid_ends_in"]
             else:
-                time_command = "!hatch " + raid_info["raid_starts_in"] 
+                time_command = "!hatch " + raid_info["raid_starts_in"]
+            time.sleep(.5)
             await self.bot.send_message(gym_channel, time_command)
+            await self.bot.send_message(gym_channel, "!leave")
             self.issued_raids.pop(raid_channel_name)
     
     def remove_active_raid(self, channel):
@@ -179,7 +182,7 @@ class RaidReportBot():
         @self.bot.event
         async def on_channel_create(channel):
             print("New Raid created %s" % channel.name)
-            self.add_active_raid(channel.name)
+            await self.add_active_raid(channel)
             
         @self.bot.event
         async def on_channel_delete(channel):
