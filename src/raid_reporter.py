@@ -7,8 +7,10 @@ import discord
 from discord.ext import commands
 import json
 import unicodedata
-from logging.config import thread
 import time
+
+TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilheiro', 'hatched': False},\
+               {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 class RaidReportBot():
     
@@ -68,7 +70,7 @@ class RaidReportBot():
         channel = discord.utils.find(lambda c: c.name==channel_name, self.bot.get_all_channels())
         gyms_to_check = []
         raid_alerts = []
-        async for message in self.bot.logs_from(channel, limit=100):
+        async for message in self.bot.logs_from(channel, limit=100, reverse=True):
             if len(message.embeds) > 0:
                 raid_info = self.parse_raid_message(message.embeds[0])
                 if raid_info["gym_name"] in self.gyms:
@@ -76,7 +78,11 @@ class RaidReportBot():
                     gyms_to_check.append(raid_info["gym_name"])
                     raid_command = self.get_create_raid_command(raid_info)
                     print(raid_command + " " + self.gym_name_2_raid_channel_name_short(raid_info["gym_name"]))
-        await self.create_raid(raid_alerts[0])
+        
+        for raid_info in raid_alerts:
+            if raid_info["gym_name"] == "Mural Cacilheiro":
+                print(raid_info)
+                #await self.create_raid(raid_info)
         self.check_if_gyms_exist(gyms_to_check)
                 
     def parse_raid_message(self, raid_embed):
@@ -87,11 +93,11 @@ class RaidReportBot():
         if len(desc_split) == 4:
             raid_info["boss"] = desc_split[1]
             raid_info["move_set"] = desc_split[2].split("**Moves:** ")[1].split(" / ")
-            raid_info["raid_ends_in"] = desc_split[3].split("hours ")[1].replace(" min ", ":").split(" sec")[0]
+            raid_info["raid_ends_in"] = desc_split[3].split("hours ")[1].split(" min")[0]
             raid_info["level"] = raid_embed["title"].split("Level ")[1].split(" ")[0]
             raid_info["hatched"] = True
         else:
-            raid_info["raid_starts_in"] = desc_split[1].split("hours ")[1].replace(" min ", ":").split(" sec")[0]
+            raid_info["raid_starts_in"] = desc_split[1].split("hours ")[1].split(" min")[0]
             raid_info["level"] = raid_embed["title"].split("Level ")[1].split(" ")[0]
             raid_info["hatched"] = False
             
@@ -127,7 +133,7 @@ class RaidReportBot():
             raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
         else:
             raid_channel_name_short = raid_channel_name_short.split("-")[1:]
-            raid_channel_name_short = raid_channel_name_short.join("-")
+            raid_channel_name_short = "-".join(raid_channel_name_short)
         return raid_channel_name_short
     
     def get_gym_channel(self, raid_channel_name):
@@ -136,7 +142,7 @@ class RaidReportBot():
     async def add_active_raid(self, channel):
         raid_channel_name = self.channel_2_raid_channel_name_short(channel)
             
-        if raid_channel_name not in self.active_raids:
+        if raid_channel_name not in self.active_raids.keys():
             self.active_raids[raid_channel_name] = channel
             
         if raid_channel_name in self.issued_raids.keys():
@@ -160,6 +166,7 @@ class RaidReportBot():
         self.issued_raids[gym_channel_name] = raid_info
         
     async def create_raid(self, raid_info):
+        print("Creating raid: %s" % str(raid_info))
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
         if raid_channel_name in self.active_raids and raid_info["hatched"]:
             gym_channel = self.get_gym_channel(raid_channel_name)
@@ -188,6 +195,10 @@ class RaidReportBot():
         async def on_channel_delete(channel):
             print("Raid Ended created %s" % channel.name)
             self.remove_active_raid(channel)
+            
+        @self.bot.command()
+        async def test(raid_id):
+            await self.create_raid(TESTS_RAIDS[int(raid_id)])
                 
         self.bot.run(self.bot_token)
 
