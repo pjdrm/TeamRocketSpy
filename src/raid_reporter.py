@@ -15,8 +15,9 @@ TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilhe
 class RaidReportBot():
     
     def __init__(self):
+        self.pokemon_list = ["lugia"] #TODO: load a list of pokemon
         self.issued_raids = {}
-        self.active_raids = self.load_existing_raids()
+        self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
@@ -24,8 +25,21 @@ class RaidReportBot():
         self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
         self.run_discord_bot()
     
+    def is_raid_cahnnel(self, channel_name):
+        first_word = channel_name.split("-")[0]
+        if channel_name.startswith(("tier")) or first_word in self.pokemon_list:
+            return True
+        else:
+            return False
+                    
     def load_existing_raids(self):
-        return {} #TODO: actually crawl list of existing channels to get active raids
+        active_raids = {}
+        for channel in self.bot.get_all_channels():
+            if self.is_raid_cahnnel(channel.name):
+                raid_channel_name_short = self.channel_2_raid_channel_name_short(channel)
+                active_raids[raid_channel_name_short] = channel
+                print("Loaded raid %s" % raid_channel_name_short)
+        return active_raids #TODO: actually crawl list of existing channels to get active raids
     
     def load_gyms(self, gyms_file, region_map):
         gyms_json = json.load(open(gyms_file))
@@ -187,6 +201,7 @@ class RaidReportBot():
         async def on_ready():
             print('RaidReportBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
+            self.active_raids = self.load_existing_raids()
             await self.read_channel_messages("raid-spotter")
         
         @self.bot.event
