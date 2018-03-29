@@ -166,13 +166,16 @@ class RaidReportBot():
         self.issued_raids[gym_channel_name] = raid_info
         
     async def create_raid(self, raid_info):
-        print("Creating raid: %s" % str(raid_info))
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
-        if raid_channel_name in self.active_raids and raid_info["hatched"]:
+        is_active_raid = raid_channel_name in self.active_raids
+        if is_active_raid and raid_info["hatched"]:
             gym_channel = self.get_gym_channel(raid_channel_name)
             if gym_channel.name.startswith(("tier")):
+                print("Setting raid boss: %s" % str(raid_info))
                 await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
-        else:
+            await self.bot.send_message(gym_channel, "Ataques: "+str(raid_info["move_set"]))
+        elif not is_active_raid:
+            print("Creating raid: %s" % str(raid_info))
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
             disc_channel = self.regional_channel_dict[regional_channel]
             create_raid_command = self.get_create_raid_command(raid_info)
