@@ -19,6 +19,8 @@ class RaidReportBot():
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
+        self.type_emojis = json.load(open("type-emojis.json"))
+        self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
         self.bot_token = "NDIyODM5NTgzODc3NjI3OTA1.DYhnlA.Ax_cAy7J4KoPHbD-vjApwC_4l6c"
@@ -179,6 +181,19 @@ class RaidReportBot():
     def report_raid(self, gym_channel_name, raid_info):
         self.issued_raids[gym_channel_name] = raid_info
         
+    def get_attack_type(self, attack):
+        return self.type_emojis[self.move_type[attack]]
+        
+    async def report_boss_moveset(self, gym_channel, moveset):
+        fast_attack = moveset[0]
+        fast_attack += " "+self.get_attack_type(fast_attack)
+        charge_attack = moveset[1]
+        charge_attack += " "+self.get_attack_type(charge_attack)
+        moveset_embed=discord.Embed(title="__**Ataques**__:", color=0x399f21)
+        moveset_embed.add_field(name="Fast", value=fast_attack)
+        moveset_embed.add_field(name="Charge", value=charge_attack)
+        await self.bot.send_message(gym_channel, embed=moveset_embed)
+        
     async def create_raid(self, raid_info):
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
         is_active_raid = raid_channel_name in self.active_raids
@@ -187,7 +202,7 @@ class RaidReportBot():
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
                 await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
-            await self.bot.send_message(gym_channel, "Ataques: "+str(raid_info["move_set"]))
+            await self.report_boss_moveset(gym_channel, raid_info["move_set"])    
         elif not is_active_raid:
             print("Creating raid: %s" % str(raid_info))
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
@@ -195,7 +210,7 @@ class RaidReportBot():
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
             await self.bot.send_message(disc_channel, create_raid_command)
-            
+        
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
