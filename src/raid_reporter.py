@@ -19,7 +19,7 @@ class RaidReportBot():
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
-        self.type_emojis = json.load(open("type-emojis.json"))
+        self.type_emojis = json.load(open("server-emojis.json"))
         self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
