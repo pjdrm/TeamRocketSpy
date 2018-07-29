@@ -13,13 +13,21 @@ TEST_RAID = 'Raid de <strong>Tyranitar</strong> às <strong>17:30</strong> em <s
 
 class TelgramScraper():
     
-    def __init__(self, phone_code, phone_number, telgram_url="https://web.telegram.org/#/im"):
+    def __init__(self, phone_code,
+                 phone_number,
+                 telgram_url="https://web.telegram.org/#/im",
+                 log_in=True,
+                 session_info_file="chrome_session_info.txt"):
         self.sleep_time = 8
         self.driver = None
         self.telgram_url = telgram_url
         self.phone_code = phone_code
         self.phone_number = phone_number
-        self.telgram_login()
+        self.session_info_file = session_info_file
+        if log_in:
+            self.telgram_login()
+        else:
+            self.restore_session()
     
     def create_driver_session(self, session_id, executor_url):
         # Save the original function, so we can revert our patch
@@ -50,9 +58,14 @@ class TelgramScraper():
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
         chrome_driver = "./chromedriver"
-        self.driver = self.create_driver_session('3b545f830be5cc7da68db55c1cf39dbc', 'http://127.0.0.1:39203')#webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
+        self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
         self.driver.get(self.telgram_url)
         time.sleep(self.sleep_time)
+        executor_url = self.driver.command_executor._url
+        session_id = self.driver.session_id
+        with open(self.session_info_file, "w+") as session_f:
+            session_f.write(executor_url+"\n"+session_id)
+       
         phone_number_box = self.driver.find_elements_by_xpath('//*[@id="ng-app"]/body/div[1]/div/div[2]/div[2]/form/div[2]/div[2]/input')[0]
         phone_number_box.send_keys(self.phone_number)
         time.sleep(self.sleep_time)
