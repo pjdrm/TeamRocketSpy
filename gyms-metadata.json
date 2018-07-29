@@ -1,8 +1,16 @@
-{
+{	
+	"2831477": {
+		"nickname": "Vidrão Alforrecas",
+		"is_ex": false
+	},
+	"2b4d8806e51c4dbdab69094f0445fc1a.16": {
+		"additional_terms": "Edifício Edificio",
+		"is_ex": false
+	},
 	"2828082": {
 		"nickname": "São João de Deus",
 		"additional_terms": "S J São João de Deus",
-		"is_ex": false
+		"is_ex": true
 	},
 	"2828083": {
 		"nickname": "Fountain (Entre Campos)",
@@ -184,7 +192,7 @@
 	},
 	"2828877": {
 		"nickname": "The Gate",
-		"is_ex": false
+		"is_ex": true
 	},
 	"2828886": {
 		"nickname": "Conto De Fadas",
@@ -197,7 +205,7 @@
 	"2828904": {
 		"nickname": "Estátua de Calouste Gulbenkian",
 		"additional_terms": "Estatua de Calouste Gulbenkian",
-		"is_ex": false
+		"is_ex": true
 	},
 	"2828906": {
 		"nickname": "No Head Statue",
@@ -208,8 +216,8 @@
 		"is_ex": true
 	},
 	"2828910": {
-		"nickname": "deconstructed statue",
-		"is_ex": false
+		"nickname": "Deconstructed Statue",
+		"is_ex": true
 	},
 	"2828925": {
 		"nickname": "LNEC",
@@ -259,6 +267,7 @@
 	},
 	"2829046": {
 		"nickname": "Galveias",
+		"additional_terms": "biboteca biinotcm galvcins palcio gaiveias",
 		"is_ex": false
 	},
 	"2829047": {
@@ -384,7 +393,7 @@
 	},
 	"2831023": {
 		"nickname": "Erotic Statue",
-		"is_ex": false
+		"is_ex": true
 	},
 	"2831039": {
 		"nickname": "Igreja de S S Pedreira",
@@ -405,7 +414,7 @@
 	},
 	"2831202": {
 		"nickname": "Rugby State",
-		"is_ex": false
+		"is_ex": true
 	},
 	"2831205": {
 		"nickname": "Não Há Pão",
