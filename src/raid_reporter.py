@@ -9,18 +9,46 @@ import json
 import unicodedata
 import time
 import asyncio
-from telgram_scraper import TelgramScraper
 from datetime import datetime as dt
+from fuzzywuzzy import process
+import signal
 
 TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilheiro', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
+POKEMON_LIST = {"registeel": 5,
+                "houndoom": 4,
+                "tyranitar": 4,
+                "absol": 4,
+                "marowak": 4,
+                "machamp": 3,
+                "flareon": 3,
+                "porygon": 3,
+                "donphan": 3,
+                "raichu": 3,
+                "magmar": 3,
+                "kirlia": 2,
+                "mawile":2,
+                "exeggutor":2,
+                "charmander":1,
+                "magikarp":1,
+                "makuhita":1,
+                "meditite":1}
+
+BLOCKED_TIERS = [1,2]
+ALLOW_POKEMON = ["Kirlia"]
+
+GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
+
 class RaidReportBot():
     
-    def __init__(self, log_file="./raid_reporter_log.txt"):
+    def __init__(self, log_file="./raid_reporter_log.txt",
+                       raids_scraped_file="raids_list.txt"):
+        
+        self.raids_scraped_file = raids_scraped_file
         self.report_log_file = log_file
-        self.tg_scraper = TelgramScraper("+1", "3139854603")
-        self.pokemon_list = ["lugia"] #TODO: load a list of pokemon
+        self.pokemon_list = POKEMON_LIST #TODO: load a list of pokemon
+        self.no_time_en_raids = []
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
@@ -28,11 +56,12 @@ class RaidReportBot():
         self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
-        self.bot_token = "NDIyODM5NTgzODc3NjI3OTA1.DYhnlA.Ax_cAy7J4KoPHbD-vjApwC_4l6c"
+        self.bot_token = "NDc1NzcwNDQ0ODg5NDU2NjQw.Dkj3pw.vFnZxLokgOvtGDzcTcmB9krasyU"
         self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
         self.run_discord_bot()
     
     def is_raid_channel(self, channel_name):
+        channel_name = channel_name.replace("alolan-", "")
         first_word = channel_name.split("-")[0]
         if channel_name.startswith(("tier")) or first_word in self.pokemon_list:
             return True
@@ -53,7 +82,8 @@ class RaidReportBot():
         gyms = {}
         for gym_dic in gyms_json:
             if gym_dic["gymId"] in region_map:
-                gyms[gym_dic["gymName"]] = gym_dic["gymId"]
+                gym_name = gym_dic["gymName"].strip()
+                gyms[gym_name] = gym_dic["gymId"]
                 if gym_dic["gymId"] in self.gyms_meta_data and "nickname" in self.gyms_meta_data[gym_dic["gymId"]]:
                     gyms[self.gyms_meta_data[gym_dic["gymId"]]["nickname"]] = gym_dic["gymId"]
         return gyms
@@ -85,13 +115,32 @@ class RaidReportBot():
                 print(gym_name)
         else:
             print("Found all gyms!")
-            
+    
+    def filter_tiers(self, raid_list):
+        filtered_raids = []
+        for raid_info in raid_list:
+            if raid_info["level"] is not None and int(raid_info["level"]) in BLOCKED_TIERS:
+                print("Filtering raid %s" % raid_info)
+                continue
+            elif raid_info["boss"] is not None and POKEMON_LIST[raid_info["boss"].lower()] in BLOCKED_TIERS and raid_info["boss"] not in ALLOW_POKEMON:
+                print("Filtering raid %s" % raid_info)
+                continue
+            else:
+                filtered_raids.append(raid_info)
+        return filtered_raids
+    
     async def check_telgram_raids(self):
         while True:
-            raid_list = self.tg_scraper.scrape_telgram()
+            print("Is websocket connection closed: "+str(self.bot.is_closed))
+            time_stamp = dt.now().strftime("%m-%d %H:%M")
+            print("%s - Checking scraped raids WTF!!!!!"%(time_stamp))
+            with open(self.raids_scraped_file) as raids_f:
+                raid_list = eval(raids_f.readlines()[0])
+            
+            raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
-            await asyncio.sleep(100)
+            await asyncio.sleep(250)
         
     async def read_channel_messages(self, channel_name):
         print("read_channel_messages")
@@ -154,11 +203,11 @@ class RaidReportBot():
         else:
             raid_channel_name = gym_name
         raid_channel_name = unicodedata.normalize('NFD', raid_channel_name).encode('ascii', 'ignore').decode('utf-8', 'ignore')
-        raid_channel_name = raid_channel_name.replace("/", "-").replace("(", "").replace(")", "").replace(" ", "-").lower()
+        raid_channel_name = raid_channel_name.replace(",", "").replace(".", "").replace(" - ", "-").replace("/", "-").replace("(", "").replace(")", "").replace(" & ", "-").replace(" ", "-").lower()
         return raid_channel_name
     
     def channel_2_raid_channel_name_short(self, channel):
-        raid_channel_name_short = channel.name
+        raid_channel_name_short = channel.name.replace("alolan-", "")
         if raid_channel_name_short.startswith("tier"):
             raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
         else:
@@ -185,16 +234,24 @@ class RaidReportBot():
                 if raid_info["raid_ends_in"] is not None:
                     time_command = "!left " + raid_info["raid_ends_in"]
             else:
-                time_command = "!hatch " + raid_info["raid_starts_in"]
-            time.sleep(.5)
+                #Sometimes we dont know when egg hatches
+                if raid_info["raid_starts_in"] is not None:
+                    time_command = "!hatch " + raid_info["raid_starts_in"]
+            time.sleep(.7)
             if time_command is not None:
                 await self.bot.send_message(gym_channel, time_command)
-                await self.bot.send_message(gym_channel, "!leave")
+            else:
+                self.no_time_en_raids.append(gym_channel)
+            #print("LEAVING RAID " + raid_channel_name)
+            await self.bot.send_message(gym_channel, "!leave")
             self.issued_raids.pop(raid_channel_name)
     
     def remove_active_raid(self, channel):
         rc_short_name = self.channel_2_raid_channel_name_short(channel)
-        self.active_raids.pop(rc_short_name)
+        if rc_short_name in self.active_raids:
+            self.active_raids.pop(rc_short_name)
+        else:
+            print("ERROR: cant find %s in:\n%s"%(rc_short_name, self.active_raids))
             
     def report_raid(self, gym_channel_name, raid_info):
         gym_channel_name = unicodedata.normalize('NFD', gym_channel_name).encode('ascii', 'ignore').decode('utf-8', 'ignore')
@@ -214,41 +271,79 @@ class RaidReportBot():
         await self.bot.send_message(gym_channel, embed=moveset_embed)
         
     async def create_raid(self, raid_info):
-        if raid_info["gym_name"] not in self.gyms:
+        if raid_info["gym_name"] in GYM_TRANSLATION:
+            gym_trans = GYM_TRANSLATION[raid_info["gym_name"]]
+            print("Translatig gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
+            raid_info["gym_name"] = gym_trans
+        elif raid_info["gym_name"] not in self.gyms:
+            query_match = process.extractOne(raid_info["gym_name"], self.gyms.keys())
+            gym_name = query_match[0]
+            score = query_match[1]
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            warn_str = time_stamp+" Unknown gym: "+raid_info["gym_name"]
+            warn_str = time_stamp+" Unknown gym: "+raid_info["gym_name"]+" Using: "+gym_name+" Score: "+str(score)
             with open(self.report_log_file, "a+") as f:
                 f.write(warn_str+"\n")
             print(warn_str)
-            return
+            raid_info["gym_name"] = gym_name
+            if score <= 86:
+                return
                 
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
         is_active_raid = raid_channel_name in self.active_raids
+        
+        if is_active_raid and raid_channel_name in self.no_time_en_raids:
+            if raid_info["raid_ends_in"] is not None:
+                print("Setting time for raid %s"%raid_channel_name)
+                gym_channel = self.get_gym_channel(raid_channel_name)
+                time.sleep(1)
+                await self.bot.send_message(gym_channel, "!left "+raid_info["raid_ends_in"])
+                self.no_time_en_raids.pop(raid_channel_name)
+            
         if is_active_raid and raid_info["hatched"]:
             gym_channel = self.get_gym_channel(raid_channel_name)
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
+                #time.sleep(1)
                 await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
             #await self.report_boss_moveset(gym_channel, raprinid_info["move_set"])    
         elif not is_active_raid:
-            print("Creating raid: %s" % str(raid_info))
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
+            print("Creating raid: %s in Regional chanel: %s" % (raid_info, regional_channel))
             disc_channel = self.regional_channel_dict[regional_channel]
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
-            await self.bot.send_message(disc_channel, create_raid_command)
+            #await asyncio.sleep(10) #I think the permissions issue was because I was sending too many messages
+            try:
+                await self.bot.send_message(disc_channel, create_raid_command)
+            except discord.Forbidden as e:
+                print("ERROR: got forbidden exception")
+                print(str(e))
+                self.bot.login(self.bot_token)
+                return
+            print("Sent raid command: %s" % create_raid_command)
+        
+    async def test_permissions(self):
+        channel = self.regional_channel_dict["santa-apolonia"]
+        while True:
+            print("Checking Permissions")
+            await self.bot.send_message(channel, "TEST2")
+            print("Done Checking")
+            await asyncio.sleep(250)
         
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
-            print('RaidReportBot Ready')
+            print('RaidReportBot Ready2')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
-            #self.bot.loop.create_task(self.check_telgram_raids())
+            self.bot.loop.create_task(self.check_telgram_raids())
+            #self.bot.loop.create_task(self.test_permissions())
             #await self.read_channel_messages("raid-spotter")
         
         @self.bot.event
         async def on_channel_create(channel):
+            if channel.name is None:
+                return
             print("New Raid created %s" % channel.name)
             await self.add_active_raid(channel)
             
@@ -260,7 +355,13 @@ class RaidReportBot():
         @self.bot.command()
         async def test(raid_id):
             await self.create_raid(TESTS_RAIDS[int(raid_id)])
-                
+            
+        @self.bot.command()
+        async def kb():
+            print("Going to kill bot")
+            self.bot.logout()
+            self.bot.close()
+            
         self.bot.run(self.bot_token)
 
 raid_bot = RaidReportBot()
