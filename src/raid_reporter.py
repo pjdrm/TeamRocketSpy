@@ -17,26 +17,37 @@ TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilhe
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 POKEMON_LIST = {"registeel": 5,
+                "mewtwo": 5,
                 "houndoom": 4,
                 "tyranitar": 4,
                 "absol": 4,
                 "marowak": 4,
+                "marowak": 4,
+                "houndoom": 4,
                 "machamp": 3,
                 "flareon": 3,
                 "porygon": 3,
                 "donphan": 3,
                 "raichu": 3,
+                "claydol": 3,
                 "magmar": 3,
+                "raichu": 3,
+                "alakazam": 3,
+                "jynx": 3,
+                "starmie": 3,
                 "kirlia": 2,
                 "mawile":2,
                 "exeggutor":2,
+                "slowbro": 2,
                 "charmander":1,
                 "magikarp":1,
                 "makuhita":1,
-                "meditite":1}
+                "meditite":1,
+                "drowzee": 1,
+                "wailmer": 1}
 
-BLOCKED_TIERS = [1,2]
-ALLOW_POKEMON = ["Kirlia"]
+BLOCKED_TIERS = [1,2,3]
+ALLOW_POKEMON = []
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 
@@ -129,7 +140,7 @@ class RaidReportBot():
                 filtered_raids.append(raid_info)
         return filtered_raids
     
-    async def check_telgram_raids(self):
+    async def check_scraped_raids(self):
         while True:
             print("Is websocket connection closed: "+str(self.bot.is_closed))
             time_stamp = dt.now().strftime("%m-%d %H:%M")
@@ -273,7 +284,7 @@ class RaidReportBot():
     async def create_raid(self, raid_info):
         if raid_info["gym_name"] in GYM_TRANSLATION:
             gym_trans = GYM_TRANSLATION[raid_info["gym_name"]]
-            print("Translatig gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
+            print("Translating gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
             raid_info["gym_name"] = gym_trans
         elif raid_info["gym_name"] not in self.gyms:
             query_match = process.extractOne(raid_info["gym_name"], self.gyms.keys())
@@ -336,7 +347,7 @@ class RaidReportBot():
             print('RaidReportBot Ready2')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
-            self.bot.loop.create_task(self.check_telgram_raids())
+            self.bot.loop.create_task(self.check_scraped_raids())
             #self.bot.loop.create_task(self.test_permissions())
             #await self.read_channel_messages("raid-spotter")
         
