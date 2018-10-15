@@ -8,24 +8,13 @@ import json
 import datetime
 import threading
 from datetime import datetime as dt, timedelta
+import sys
 
 def get_gym_name(fort_id, cnx):
     cursor = cnx.cursor()
     query = "select name from forts where id="+str(fort_id)+";"
     cursor.execute(query)
     return cursor.fetchone()[0]
-
-poke_info = json.load(open("./pokemon.json"))
-
-config = {
-  'user': 'root',
-  'password': '249718513',
-  'host': '127.0.0.1',
-  'database': 'mapadroid',
-  'raise_on_warnings': True
-}
-
-raids_scraped_file="raids_list.txt"
 
 def is_present_raid(raid_info):
     raid_end_time = None
@@ -104,5 +93,17 @@ def scrape_monocle_db(config, poke_info, raids_scraped_file):
         raids_f.write(str(raid_list))
     
     cnx.close()
-
-scrape_monocle_db(config, poke_info, raids_scraped_file)
+    
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        tr_spy_config_path = "./config/tr_spy_config.json"
+    else:
+        tr_spy_config_path = sys.argv[1]
+        
+    with open(tr_spy_config_path) as data_file:    
+        tr_spy_config = json.load(data_file)
+    
+    poke_info = json.load(open("./pokemon.json"))
+    raids_scraped_file="raids_list.txt"
+        
+    scrape_monocle_db(tr_spy_config, poke_info, raids_scraped_file)
