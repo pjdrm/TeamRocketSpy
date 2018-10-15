@@ -12,6 +12,7 @@ import asyncio
 from datetime import datetime as dt
 from fuzzywuzzy import process
 import signal
+import sys
 
 TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilheiro', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
@@ -53,8 +54,9 @@ GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCam
 
 class RaidReportBot():
     
-    def __init__(self, log_file="./raid_reporter_log.txt",
-                       raids_scraped_file="raids_list.txt"):
+    def __init__(self, bot_token,
+                       raids_scraped_file,
+                       log_file="./raid_reporter_log.txt"):
         
         self.raids_scraped_file = raids_scraped_file
         self.report_log_file = log_file
@@ -67,7 +69,7 @@ class RaidReportBot():
         self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
-        self.bot_token = "NDc1NzcwNDQ0ODg5NDU2NjQw.Dkj3pw.vFnZxLokgOvtGDzcTcmB9krasyU"
+        self.bot_token = bot_token
         self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
         self.run_discord_bot()
     
@@ -375,4 +377,15 @@ class RaidReportBot():
             
         self.bot.run(self.bot_token)
 
-raid_bot = RaidReportBot()
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        tr_spy_config_path = "./config/tr_spy_config.json"
+    else:
+        tr_spy_config_path = sys.argv[1]
+        
+    with open(tr_spy_config_path) as data_file:    
+        tr_spy_config = json.load(data_file)
+    
+    bot_token = tr_spy_config["bot_token"]
+    raids_scraped_file = tr_spy_config["raids_scraped_file"]
+    raid_bot = RaidReportBot(bot_token, raids_scraped_file)

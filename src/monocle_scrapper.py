@@ -55,10 +55,19 @@ def is_present_raid(raid_info):
     else:
         return True
 
-def scrape_monocle_db(config, poke_info, raids_scraped_file):
-    threading.Timer(120, scrape_monocle_db, [config, poke_info, raids_scraped_file]).start()
+def scrape_monocle_db(config):
+    with open(config["poke_info"]) as f:
+        poke_info = json.load(f)
+    raids_scraped_file= config["raids_scraped_file"]
+    db_config = { "user": config["user"],
+                  "password": config["password"],
+                  "host": config["host"],
+                  "database": config["database"],
+                  "raise_on_warnings": True}
+    
+    threading.Timer(120, scrape_monocle_db, [config]).start()
     print("Starting Monocle Scrape")
-    cnx = mysql.connector.connect(**config)
+    cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
     query = "SELECT fort_id, level, pokemon_id, time_battle, time_end FROM raids"
@@ -103,7 +112,4 @@ if __name__ == "__main__":
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
     
-    poke_info = json.load(open("./pokemon.json"))
-    raids_scraped_file="raids_list.txt"
-        
-    scrape_monocle_db(tr_spy_config, poke_info, raids_scraped_file)
+    scrape_monocle_db(tr_spy_config)
