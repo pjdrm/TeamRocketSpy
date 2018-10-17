@@ -14,7 +14,7 @@ from fuzzywuzzy import process
 import signal
 import sys
 
-TESTS_RAIDS = [{'level': '5', 'raid_starts_in': '28', 'gym_name': 'Mural Cacilheiro', 'hatched': False},\
+TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Biblioteca Palácio Galveias', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 POKEMON_LIST = {"registeel": 5,
@@ -25,6 +25,7 @@ POKEMON_LIST = {"registeel": 5,
                 "marowak": 4,
                 "marowak": 4,
                 "houndoom": 4,
+                "aggron": 4,
                 "machamp": 3,
                 "flareon": 3,
                 "porygon": 3,
@@ -133,10 +134,10 @@ class RaidReportBot():
         filtered_raids = []
         for raid_info in raid_list:
             if raid_info["level"] is not None and int(raid_info["level"]) in BLOCKED_TIERS:
-                print("Filtering raid %s" % raid_info)
+                #print("Filtering raid %s" % raid_info)
                 continue
             elif raid_info["boss"] is not None and POKEMON_LIST[raid_info["boss"].lower()] in BLOCKED_TIERS and raid_info["boss"] not in ALLOW_POKEMON:
-                print("Filtering raid %s" % raid_info)
+                #print("Filtering raid %s" % raid_info)
                 continue
             else:
                 filtered_raids.append(raid_info)
@@ -153,7 +154,7 @@ class RaidReportBot():
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
-            await asyncio.sleep(250)
+            await asyncio.sleep(60)
         
     async def read_channel_messages(self, channel_name):
         print("read_channel_messages")
@@ -256,7 +257,7 @@ class RaidReportBot():
             else:
                 self.no_time_en_raids.append(gym_channel)
             #print("LEAVING RAID " + raid_channel_name)
-            await self.bot.send_message(gym_channel, "!leave")
+            #await self.bot.send_message(gym_channel, "!leave")
             self.issued_raids.pop(raid_channel_name)
     
     def remove_active_raid(self, channel):
@@ -374,6 +375,13 @@ class RaidReportBot():
             print("Going to kill bot")
             self.bot.logout()
             self.bot.close()
+            
+        @self.bot.command()
+        async def autonone():
+            for channel in self.bot.get_all_channels():
+                if channel.name in "#the-bot-lab":
+                    print("Going to autonone")
+                    await self.bot.send_message(channel, "!auto none")
             
         self.bot.run(self.bot_token)
 
