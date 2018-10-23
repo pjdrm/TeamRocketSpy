@@ -14,7 +14,7 @@ from fuzzywuzzy import process
 import signal
 import sys
 
-TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Biblioteca Palácio Galveias', 'hatched': False},\
+TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 POKEMON_LIST = {"registeel": 5,
@@ -46,10 +46,11 @@ POKEMON_LIST = {"registeel": 5,
                 "makuhita":1,
                 "meditite":1,
                 "drowzee": 1,
-                "wailmer": 1}
+                "wailmer": 1,
+                "shinx": 1}
 
 BLOCKED_TIERS = [1,2,3]
-ALLOW_POKEMON = []
+ALLOW_POKEMON = ["Shinx"]
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 
@@ -72,6 +73,7 @@ class RaidReportBot():
         self.gyms = self.load_gyms("gyms.json", self.region_map)
         self.bot_token = bot_token
         self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
+        self.raid_messages = {}
         self.run_discord_bot()
     
     def is_raid_channel(self, channel_name):
@@ -133,10 +135,9 @@ class RaidReportBot():
     def filter_tiers(self, raid_list):
         filtered_raids = []
         for raid_info in raid_list:
+            if raid_info["boss"] is not None and raid_info["boss"] in ALLOW_POKEMON:
+                filtered_raids.append(raid_info)
             if raid_info["level"] is not None and int(raid_info["level"]) in BLOCKED_TIERS:
-                #print("Filtering raid %s" % raid_info)
-                continue
-            elif raid_info["boss"] is not None and POKEMON_LIST[raid_info["boss"].lower()] in BLOCKED_TIERS and raid_info["boss"] not in ALLOW_POKEMON:
                 #print("Filtering raid %s" % raid_info)
                 continue
             else:
@@ -145,9 +146,7 @@ class RaidReportBot():
     
     async def check_scraped_raids(self):
         while True:
-            print("Is websocket connection closed: "+str(self.bot.is_closed))
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            print("%s - Checking scraped raids WTF!!!!!"%(time_stamp))
             with open(self.raids_scraped_file) as raids_f:
                 raid_list = eval(raids_f.readlines()[0])
             
@@ -217,7 +216,15 @@ class RaidReportBot():
         else:
             raid_channel_name = gym_name
         raid_channel_name = unicodedata.normalize('NFD', raid_channel_name).encode('ascii', 'ignore').decode('utf-8', 'ignore')
-        raid_channel_name = raid_channel_name.replace(",", "").replace(".", "").replace(" - ", "-").replace("/", "-").replace("(", "").replace(")", "").replace(" & ", "-").replace(" ", "-").lower()
+        raid_channel_name = raid_channel_name.replace("?", "")\
+                                             .replace(",", "")\
+                                             .replace(".", "")\
+                                             .replace(" - ", "-")\
+                                             .replace("/", "-")\
+                                             .replace("(", "")\
+                                             .replace(")", "")\
+                                             .replace(" & ", "-")\
+                                             .replace(" ", "-").lower()
         return raid_channel_name
     
     def channel_2_raid_channel_name_short(self, channel):
@@ -253,7 +260,9 @@ class RaidReportBot():
                     time_command = "!hatch " + raid_info["raid_starts_in"]
             time.sleep(.7)
             if time_command is not None:
-                await self.bot.send_message(gym_channel, time_command)
+                time_message = await self.bot.send_message(gym_channel, time_command)
+                await self.bot.wait_for_reaction(['👍'], message=time_message)
+                await self.bot.delete_message(time_message)
             else:
                 self.no_time_en_raids.append(gym_channel)
             #print("LEAVING RAID " + raid_channel_name)
@@ -300,6 +309,7 @@ class RaidReportBot():
             print(warn_str)
             raid_info["gym_name"] = gym_name
             if score <= 86:
+                print("Discarded raid")
                 return
                 
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
@@ -318,7 +328,9 @@ class RaidReportBot():
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
                 #time.sleep(1)
-                await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
+                boss_message = await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
+                await self.bot.wait_for_reaction(['👍'], message=boss_message)
+                await self.bot.delete_message(boss_message)
             #await self.report_boss_moveset(gym_channel, raprinid_info["move_set"])    
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
@@ -334,7 +346,7 @@ class RaidReportBot():
                 print(str(e))
                 self.bot.login(self.bot_token)
                 return
-            print("Sent raid command: %s" % create_raid_command)
+            #print("Sent raid command: %s" % create_raid_command)
         
     async def test_permissions(self):
         channel = self.regional_channel_dict["santa-apolonia"]
@@ -347,7 +359,7 @@ class RaidReportBot():
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
-            print('RaidReportBot Ready2')
+            print('RaidReportBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
