@@ -33,7 +33,7 @@ def get_weather(locationKey):
     return str(r.content)
 
 def scrape_weather(locationKeys, out_l, config, s2_cells, out_f_ingame):
-    threading.Timer(3500, scrape_weather, [locationKeys, out_l]).start()
+    threading.Timer(3500, scrape_weather, [locationKeys, out_l, config, s2_cells, out_f_ingame]).start()
     current_time_stamp = dt.now()
     ts = current_time_stamp.strftime("%d-%m-%y %H:%M")
     print("%s Scraping forecast" % ts)
