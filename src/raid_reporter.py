@@ -13,12 +13,14 @@ from datetime import datetime as dt
 from fuzzywuzzy import process
 import signal
 import sys
+from asyncio.tasks import sleep
 
 TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 POKEMON_LIST = {"registeel": 5,
                 "mewtwo": 5,
+                "giratina": 5,
                 "houndoom": 4,
                 "tyranitar": 4,
                 "absol": 4,
@@ -26,6 +28,7 @@ POKEMON_LIST = {"registeel": 5,
                 "marowak": 4,
                 "houndoom": 4,
                 "aggron": 4,
+                "togetic": 4,
                 "machamp": 3,
                 "flareon": 3,
                 "porygon": 3,
@@ -37,17 +40,25 @@ POKEMON_LIST = {"registeel": 5,
                 "alakazam": 3,
                 "jynx": 3,
                 "starmie": 3,
+                "sharpedo": 3,
+                "gengar": 3,
+                "granbull": 3,
                 "kirlia": 2,
                 "mawile":2,
                 "exeggutor":2,
                 "slowbro": 2,
+                "sableye": 2,
+                "misdreavus": 2,
                 "charmander":1,
                 "magikarp":1,
                 "makuhita":1,
                 "meditite":1,
                 "drowzee": 1,
                 "wailmer": 1,
-                "shinx": 1}
+                "shinx": 1,
+                "shuppet": 1,
+                "duskull": 1,
+                "snorunt": 1}
 
 BLOCKED_TIERS = [1,2,3]
 ALLOW_POKEMON = ["Shinx"]
@@ -261,7 +272,7 @@ class RaidReportBot():
             time.sleep(.7)
             if time_command is not None:
                 time_message = await self.bot.send_message(gym_channel, time_command)
-                await self.bot.wait_for_reaction(['👍'], message=time_message)
+                await asyncio.sleep(0.5)
                 await self.bot.delete_message(time_message)
             else:
                 self.no_time_en_raids.append(gym_channel)
@@ -329,7 +340,7 @@ class RaidReportBot():
                 print("Setting raid boss: %s" % str(raid_info))
                 #time.sleep(1)
                 boss_message = await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
-                await self.bot.wait_for_reaction(['👍'], message=boss_message)
+                await asyncio.sleep(0.5)
                 await self.bot.delete_message(boss_message)
             #await self.report_boss_moveset(gym_channel, raprinid_info["move_set"])    
         elif not is_active_raid:
