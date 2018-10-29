@@ -1,4 +1,7 @@
-{	
+{	"2828258": {
+		"nickname": "AGEAS",
+		"is_ex": false
+	},
 	"2831477": {
 		"nickname": "Vidrão Alforrecas",
 		"is_ex": false
@@ -266,7 +269,7 @@
 		"is_ex": false
 	},
 	"2829046": {
-		"nickname": "Galveias",
+		"nickname": "Biblioteca Palácio Galveias (Campo Pequeno)",
 		"additional_terms": "biboteca biinotcm galvcins palcio gaiveias",
 		"is_ex": false
 	},
@@ -320,7 +323,7 @@
 		"is_ex": false
 	},
 	"2830216": {
-		"nickname": "Woman and The Eagle",
+		"nickname": "Woman and The Eagle (Renault do Areeiro)",
 		"is_ex": false
 	},
 	"2830221": {
