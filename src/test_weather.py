@@ -55,6 +55,7 @@ def get_in_game_weather(config, s2_cell_id):
     
     query = "SELECT * FROM weather WHERE s2_cell_id = "+str(s2_cell_id)
     cursor.execute(query)
+    in_game_weather = None
     for (id, s2_cell_id, condition, alert_severity, warn, day, updated) in cursor:
         updated = dt.fromtimestamp(updated).strftime("%d-%m-%y %H:%M")
         in_game_weather = "condition "+str(condition)+" updated "+str(updated)
@@ -63,6 +64,8 @@ def get_in_game_weather(config, s2_cell_id):
 def scrape_in_game_weather(config, s2_cells, out_files, scrape_time_stamp):
     for s2_cell_id, out_f in zip(s2_cells, out_files):
         in_game_weather = get_in_game_weather(config, s2_cell_id)
+        if in_game_weather is None:
+            return
         with open(out_f, "a+") as f:
             f.write(scrape_time_stamp+" "+in_game_weather+"\n")
          

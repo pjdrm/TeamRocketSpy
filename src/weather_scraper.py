@@ -20,24 +20,25 @@ class WeatherBot():
     
     def __init__(self, config, log_file="./forecast_log.txt", report_log_file="./report_forecast_log.txt", run_d_bot=False):
         self.report_log_file = report_log_file
-        with open(config) as config_file:
-            config_dict = json.load(config_file)
-        self.weather_lookup_table = config_dict["weather_lookup_table"]
-        self.weather_consts = config_dict["weather_consts"]
-        self.bot_token = config_dict["bot_token"]
-        self.accu_weather_url = config_dict["accu_weather_url"]
+        #with open(config) as config_file:
+        #    config_dict = json.load(config_file)
+        #self.weather_lookup_table = config_dict["weather_lookup_table"]
+        #self.weather_consts = config_dict["weather_consts"]
+        #self.bot_token = config_dict["bot_token"]
+        self.accu_weather_url = ["https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/273981",
+                                 "https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/273981?hour=20"]#config_dict["accu_weather_url"]
         self.log_file = log_file
         self.emoji_dict = {}
-        for key in self.weather_consts:
-            emoji = self.weather_consts[key]["emoji"]
-            self.emoji_dict[emoji] = key
+        #for key in self.weather_consts:
+        #    emoji = self.weather_consts[key]["emoji"]
+        #    self.emoji_dict[emoji] = key
         self.weather_forecast = {}
-        self.cached_weather_forecast = self.load_forecast_cache(self.log_file)
+        #self.cached_weather_forecast = self.load_forecast_cache(self.log_file)
         self.scrape_weather()
-        self.get_in_game_weather()
-        if run_d_bot:
-            self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
-            self.run_discord_bot()
+        #self.get_in_game_weather()
+        #if run_d_bot:
+        #    self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
+        #    self.run_discord_bot()
     
     def get_in_game_weather(self):
         threading.Timer(3500, self.get_in_game_weather).start()
@@ -162,6 +163,7 @@ class WeatherBot():
             f.write("Time stamp: %s Forecast: %s\n" % (time_stamp.strftime("%m-%d %H:%M"), str(fore_cast)))
     
     def scrape_forecast(self, driver, url, weather_forecast):
+        print(url)
         driver.get(url)
         for h in range(1,9):
             w_hour, hour_forecast_dict  = self.get_hour_forecast(driver, h)
@@ -184,9 +186,9 @@ class WeatherBot():
         self.scrape_forecast(driver, self.accu_weather_url[0], self.weather_forecast)
         self.scrape_forecast(driver, self.accu_weather_url[1], self.weather_forecast)
         self.log_fore_cast(current_time_stamp, self.weather_forecast, self.log_file)
-        self.cached_weather_forecast.append((current_time_stamp, copy.deepcopy(self.weather_forecast)))
-        self.cached_weather_forecast = self.cached_weather_forecast[-5:]
-        print("Scrape time stamp: %s" % (current_time_stamp.strftime('%H:%M')))
+        #self.cached_weather_forecast.append((current_time_stamp, copy.deepcopy(self.weather_forecast)))
+        #self.cached_weather_forecast = self.cached_weather_forecast[-5:]
+        print("%s" % (current_time_stamp.strftime('%d-%m-%y %H:%M')))
         driver.close()
         
     def get_debug_weather_reports(self, h):

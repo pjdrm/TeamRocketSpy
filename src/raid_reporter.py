@@ -325,6 +325,8 @@ class RaidReportBot():
                 
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
         is_active_raid = raid_channel_name in self.active_raids
+        #print(raid_channel_name)
+        #print(self.active_raids)
         
         if is_active_raid and raid_channel_name in self.no_time_en_raids:
             if raid_info["raid_ends_in"] is not None:
