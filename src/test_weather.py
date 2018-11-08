@@ -33,7 +33,7 @@ def get_weather(locationKey):
     return str(r.content)
 
 def scrape_weather(locationKeys, out_l, config, s2_cells, out_f_ingame):
-    threading.Timer(3500, scrape_weather, [locationKeys, out_l, config, s2_cells, out_f_ingame]).start()
+    threading.Timer(3500, scrape_weather, [locationKeys, out_l, config, s2_cells_loc_keys, out_f_ingame]).start()
     current_time_stamp = dt.now()
     ts = current_time_stamp.strftime("%d-%m-%y %H:%M")
     print("%s Scraping forecast" % ts)
@@ -61,9 +61,9 @@ def get_in_game_weather(config, s2_cell_id):
         in_game_weather = "condition "+str(condition)+" updated "+str(updated)
     return in_game_weather
 
-def scrape_in_game_weather(config, s2_cells, out_files, scrape_time_stamp):
+def scrape_in_game_weather(tr_config, s2_cells, out_files, scrape_time_stamp):
     for s2_cell_id, out_f in zip(s2_cells, out_files):
-        in_game_weather = get_in_game_weather(config, s2_cell_id)
+        in_game_weather = get_in_game_weather(tr_config, s2_cell_id)
         if in_game_weather is None:
             return
         with open(out_f, "a+") as f:

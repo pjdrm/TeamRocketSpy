@@ -12,21 +12,32 @@ from datetime import datetime as dt
 import datetime
 import threading
 import copy
+import mysql.connector
 
 from selenium.webdriver import ActionChains
 import time
 
 class WeatherBot():
     
-    def __init__(self, config, log_file="./forecast_log.txt", report_log_file="./report_forecast_log.txt", run_d_bot=False):
-        self.report_log_file = report_log_file
+    def __init__(self, config,
+                       tr_spy_config_path="./config/tr_spy_config.json",
+                       log_file="./weather_forecasts/acu/forecast_log.txt",
+                       ingame_weather_log_file="./weather_forecasts/ingame/forecast_log.txt",
+                       run_d_bot=False):
+        self.ingame_weather_log_file = ingame_weather_log_file
+        with open(tr_spy_config_path) as data_file:    
+            self.tr_config = json.load(data_file)
         #with open(config) as config_file:
         #    config_dict = json.load(config_file)
         #self.weather_lookup_table = config_dict["weather_lookup_table"]
         #self.weather_consts = config_dict["weather_consts"]
         #self.bot_token = config_dict["bot_token"]
-        self.accu_weather_url = ["https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/273981",
-                                 "https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/273981?hour=20"]#config_dict["accu_weather_url"]
+        self.s2_cells_loc_keys = ['273981', '273947']
+        self.s2_cells_db_ids = [943841672003846144, 943839472980590592]
+        self.accu_weather_url = []
+        self.base_url = 'https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/'
+        for s2c in self.s2_cells_loc_keys:
+            self.accu_weather_url.append(self.base_url+s2c)
         self.log_file = log_file
         self.emoji_dict = {}
         #for key in self.weather_consts:
@@ -34,88 +45,46 @@ class WeatherBot():
         #    self.emoji_dict[emoji] = key
         self.weather_forecast = {}
         #self.cached_weather_forecast = self.load_forecast_cache(self.log_file)
-        self.scrape_weather()
         #self.get_in_game_weather()
         #if run_d_bot:
         #    self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
         #    self.run_discord_bot()
-    
-    def get_in_game_weather(self):
-        threading.Timer(3500, self.get_in_game_weather).start()
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
         
         chrome_driver = "./chromedriver"
-        driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
-        driver.get("http://map.pogotuga.club/")
-        iframes = driver.find_elements_by_tag_name("iframe")
-                        
-        driver.switch_to.frame(iframes[1])
-        ids = driver.find_elements_by_xpath('//*[@id]')
-        for ii in ids:
-            #print ii.tag_name
-            if "cancel" == ii.get_attribute('id'):
-                ii.click()
-                #print("Clicked Cancel")
+        self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
+        self.scrape_weather()
+    
+    def get_in_game_weather(self, config, s2_cell_id):
+        db_config = { "user": config["user"],
+                      "password": config["password"],
+                      "host": config["host"],
+                      "database": config["database"],
+                      "raise_on_warnings": True}
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor(buffered=True)
         
-        driver.switch_to.default_content()
-        driver.find_elements_by_xpath('//*[@class="confirm"]')[0].click()
-        #print("Clicked Ok")
-        
-        found_weather = []
-        pokemon_despawn_time = []
-        for i in range(3, 400):
-            possible_pokemon_wb = driver.find_elements_by_xpath('//*[@id="map"]/div/div/div[1]/div[3]/div[2]/div[3]/div[@class]['+str(i)+']')
-            if len(possible_pokemon_wb) == 0:
-                break
-            else:
-                possible_pokemon_wb = possible_pokemon_wb[0]
-            hover = ActionChains(driver).move_to_element(possible_pokemon_wb)
-            hover.perform()
-            time.sleep(.1)
-            poke_pop_up = driver.find_elements_by_xpath('//*[@class="pokemon weather-boost"]')
-            #poke_name = driver.find_elements_by_xpath('//*[@class="pokemon name"]')[0].text
-            #if len(poke_name):
-            #    print("Checking weather for %s" % poke_name)
-            if len(poke_pop_up) > 0 and len(poke_pop_up[0].text) > 0:
-                weather = poke_pop_up[0].text
-                time_disppear = driver.find_elements_by_xpath('//*[@class="pokemon disappear"]')[0].text
-                time_disppear = time_disppear.split("(")[1].replace(")", "")
-                if len(found_weather) == 0 or weather not in found_weather:
-                    found_weather.append(weather)
-                    pokemon_despawn_time.append(time_disppear)
-                if len(found_weather) == 2:
-                    break
-        for w, ts in zip(found_weather, pokemon_despawn_time):
-            print("Weather: %s Time stamp: %s" % (w, ts))
-            
-        if len(found_weather) > 0:
-            in_game_weater = None
-            if len(found_weather) == 1:
-                #print("Only found weather condition\n")
-                in_game_weater = found_weather[0]
-                
-            else:
-                ts1 = dt.strptime(pokemon_despawn_time[0],'%H:%M')
-                ts2 = dt.strptime(pokemon_despawn_time[1],'%H:%M')
-                #print("Found two weather conditions")
-                if ts1.time() > ts2.time():
-                    in_game_weater = found_weather[0]
-                else:
-                    in_game_weater = found_weather[1]
-            
-            time_stamp = dt.now()
-            print("Scrape time stamp: %s In-game weather: %s" % (time_stamp.strftime('%H:%M'), in_game_weater))
-            with open(self.report_log_file, "a+") as f:
-                time_stamp = dt.now().strftime("%m-%d %H:%M")
-                f.write(time_stamp+" "+in_game_weater+"\n")
-        else:
-            print("WARNING: could not scrape weather")
-        driver.close()
-                
+        query = "SELECT * FROM weather WHERE s2_cell_id = "+str(s2_cell_id)
+        cursor.execute(query)
+        in_game_weather = None
+        for (id, s2_cell_id, condition, alert_severity, warn, day, updated) in cursor:
+            updated = dt.fromtimestamp(updated).strftime("%d-%m-%y %H:%M")
+            in_game_weather = "s2_cell_id "+str(s2_cell_id)+" condition "+str(condition)+" updated "+str(updated)
+        return in_game_weather
+    
+    def scrape_in_game_weather(self, scrape_time_stamp):
+        with open(self.ingame_weather_log_file, "a+") as f:
+            for s2_cell_id in self.s2_cells_db_ids:
+                in_game_weather = self.get_in_game_weather(self.tr_config, s2_cell_id)
+                if in_game_weather is None:
+                    print("No ingame weather in db")
+                    return
+                f.write(scrape_time_stamp+" "+in_game_weather+"\n")
+        print("Ingame weather scraped at %s" % (scrape_time_stamp))
         
     def get_hour_forecast(self, driver, h):
         w_hour = driver.find_elements_by_xpath('//*[@id="detail-hourly"]/div/div[2]/table/thead/tr/td['+str(h)+']/div[1]')[0].text
@@ -158,38 +127,41 @@ class WeatherBot():
             forecast_cache.append((time_stamp, forecast))
         return forecast_cache
     
-    def log_fore_cast(self, time_stamp, fore_cast, log_file):
-        with open(log_file, "a+") as f:
-            f.write("Time stamp: %s Forecast: %s\n" % (time_stamp.strftime("%m-%d %H:%M"), str(fore_cast)))
-    
-    def scrape_forecast(self, driver, url, weather_forecast):
+    def scrape_forecast(self, driver, url, weather_forecast, time_carry):
+        if time_carry > 0:
+            url += '?hour='+str(time_carry)
         print(url)
         driver.get(url)
+        time.sleep(8)
+        
+        add_button = driver.find_elements_by_xpath('//*[@id="forecast-extended"]/div[5]/div[2]/section[1]/div[3]/div[1]/p[2]')
+        if len(add_button) > 0:
+            print("clicking add button")
+            add_button[0].click()
         for h in range(1,9):
             w_hour, hour_forecast_dict  = self.get_hour_forecast(driver, h)
-            weather_forecast[w_hour] = hour_forecast_dict
+            weather_forecast[w_hour+' tc'+str(time_carry)] = hour_forecast_dict
         return weather_forecast
             
     def scrape_weather(self):
         threading.Timer(3500, self.scrape_weather).start()
         current_time_stamp = dt.now()
+        current_hour = int(current_time_stamp.strftime('%H'))
+        current_time_stamp = current_time_stamp.strftime('%d-%m-%y %H:%M')
         # instantiate a chrome options object so you can set the size and headless preference
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--window-size=1920x1080")
-        chrome_options.add_argument("--enable-javascript")
-        chrome_options.add_argument("user-agent=WIP")
         
-        chrome_driver = "./chromedriver"
-        driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
         self.weather_forecast = {}
-        self.scrape_forecast(driver, self.accu_weather_url[0], self.weather_forecast)
-        self.scrape_forecast(driver, self.accu_weather_url[1], self.weather_forecast)
-        self.log_fore_cast(current_time_stamp, self.weather_forecast, self.log_file)
-        #self.cached_weather_forecast.append((current_time_stamp, copy.deepcopy(self.weather_forecast)))
-        #self.cached_weather_forecast = self.cached_weather_forecast[-5:]
-        print("%s" % (current_time_stamp.strftime('%d-%m-%y %H:%M')))
-        driver.close()
+        with open(self.log_file, "a+") as log_f:
+            for accu_s2cell_url in self.accu_weather_url:
+                self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, 0)
+                self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+8)
+                self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+16)
+                self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+24)
+                s2cel_id = accu_s2cell_url.split('/')[-1]
+                log_f.write("Time stamp: %s s2cell: %s Forecast: %s\n" % (current_time_stamp, s2cel_id, str(self.weather_forecast)))
+        print("Accu weather scraped at %s" % (current_time_stamp))
+        #driver.close()
+        self.scrape_in_game_weather(current_time_stamp)
         
     def get_debug_weather_reports(self, h):
         debug_pogo_weather1 = ""
