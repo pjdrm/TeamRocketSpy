@@ -62,7 +62,7 @@ POKEMON_LIST = {"registeel": 5,
                 "buizel": 1}
 
 BLOCKED_TIERS = [1,2,3]
-ALLOW_POKEMON = ["Shinx", "Buizel"]
+ALLOW_POKEMON = ["Shinx", "Buizel", "Sharpedo"]
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 

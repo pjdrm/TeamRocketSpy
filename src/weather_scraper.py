@@ -50,7 +50,7 @@ class WeatherBot():
         #    self.bot = commands.Bot(command_prefix=config_dict["prefix"], description='WeatherBot')
         #    self.run_discord_bot()
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
