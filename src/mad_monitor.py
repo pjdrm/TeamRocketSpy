@@ -63,10 +63,10 @@ class MADMonitor():
         (output, err) = process.communicate()
         exit_code = process.wait()
         logging.info("Performed ?click login command.")
-        time.sleep(5)
+        time.sleep(40)
         os.system(self.reset_all_script+'  >/tmp/MADreset_all.log 2>&1 &')
         logging.info("Performed ?reset all command.")
-        time.sleep(30)
+        time.sleep(40)
         os.system(self.reset_scanner_script+' >/tmp/MADreset_scanner.log 2>&1 &')
         logging.info("Performed ?reset scanner command.")
 
