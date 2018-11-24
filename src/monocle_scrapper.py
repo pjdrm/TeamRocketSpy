@@ -6,7 +6,6 @@ Created on Oct 8, 2018
 import mysql.connector
 import json
 import datetime
-import threading
 from datetime import datetime as dt, timedelta
 import sys
 
@@ -58,14 +57,12 @@ def is_present_raid(raid_info):
 def scrape_monocle_db(config):
     with open(config["poke_info"]) as f:
         poke_info = json.load(f)
-    #raids_scraped_file= config["raids_scraped_file"]
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
                   "database": config["database"],
                   "raise_on_warnings": True}
     
-    #threading.Timer(120, scrape_monocle_db, [config]).start()
     print("Starting Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
@@ -95,12 +92,6 @@ def scrape_monocle_db(config):
         if is_present_raid(raid_dict):
             raid_list.append(raid_dict)
         
-    #for raid in raid_list:
-    #    print(raid)
-        
-    #with open(raids_scraped_file, "w+") as raids_f:
-    #    raids_f.write(str(raid_list))
-    
     cnx.close()
     return raid_list
     
