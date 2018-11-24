@@ -14,67 +14,30 @@ from fuzzywuzzy import process
 import signal
 import sys
 from asyncio.tasks import sleep
+from monocle_scrapper import scrape_monocle_db
+from urllib.request import urlopen
 
 TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
-POKEMON_LIST = {"registeel": 5,
-                "mewtwo": 5,
-                "giratina": 5,
-                "houndoom": 4,
-                "tyranitar": 4,
-                "absol": 4,
-                "marowak": 4,
-                "marowak": 4,
-                "houndoom": 4,
-                "aggron": 4,
-                "togetic": 4,
-                "machamp": 3,
-                "flareon": 3,
-                "porygon": 3,
-                "donphan": 3,
-                "raichu": 3,
-                "claydol": 3,
-                "magmar": 3,
-                "raichu": 3,
-                "alakazam": 3,
-                "jynx": 3,
-                "starmie": 3,
-                "sharpedo": 3,
-                "gengar": 3,
-                "granbull": 3,
-                "kirlia": 2,
-                "mawile":2,
-                "exeggutor":2,
-                "slowbro": 2,
-                "sableye": 2,
-                "misdreavus": 2,
-                "charmander":1,
-                "magikarp":1,
-                "makuhita":1,
-                "meditite":1,
-                "drowzee": 1,
-                "wailmer": 1,
-                "shinx": 1,
-                "shuppet": 1,
-                "duskull": 1,
-                "snorunt": 1,
-                "buizel": 1}
-
-BLOCKED_TIERS = [1,2,3]
-ALLOW_POKEMON = ["Shinx", "Buizel", "Sharpedo"]
-
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 
-class RaidReportBot():
+class UnownBot():
     
-    def __init__(self, bot_token,
-                       raids_scraped_file,
+    def __init__(self, tr_spy_config,
+                       fetch_raidmons=False,
                        log_file="./raid_reporter_log.txt"):
-        
-        self.raids_scraped_file = raids_scraped_file
+        if fetch_raidmons:
+            print("Updating list of raid bosses")
+            self.fetch_raid_bosses()
+        with open(tr_spy_config["raidmons_path"]) as f:
+            self.raid_bosses = eval(f.readline())
+                        
+        self.tr_spy_config= tr_spy_config
+        self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
+        self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
+        self.raids_scraped_file = tr_spy_config["raids_scraped_file"]
         self.report_log_file = log_file
-        self.pokemon_list = POKEMON_LIST #TODO: load a list of pokemon
         self.no_time_en_raids = []
         self.issued_raids = {}
         self.active_raids = None
@@ -83,15 +46,25 @@ class RaidReportBot():
         self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
-        self.bot_token = bot_token
-        self.bot = commands.Bot(command_prefix="%", description='RaidReportBot')
+        self.bot_token = tr_spy_config["bot_token"]
+        self.bot = commands.Bot(command_prefix="%", description='UnownBot')
         self.raid_messages = {}
         self.run_discord_bot()
     
+    def fetch_raid_bosses(self):
+        data = urlopen('https://raw.githubusercontent.com/Googer/Professor-Pine/main-dev/data/pokemon.json').read() #bytes
+        pokemon_list = eval(data.decode('utf-8').replace("true", "True"))
+        raid_bosses = []
+        for poke in pokemon_list:
+            if "name" in poke and "tier" in poke:
+                raid_bosses.append(poke["name"])
+        with open(tr_spy_config["raidmons_path"], "w+") as f:
+            f.write(str(raid_bosses))
+        
     def is_raid_channel(self, channel_name):
         channel_name = channel_name.replace("alolan-", "")
         first_word = channel_name.split("-")[0]
-        if channel_name.startswith(("tier")) or first_word in self.pokemon_list:
+        if channel_name.startswith(("tier")) or (first_word in self.raid_bosses):
             return True
         else:
             return False
@@ -147,9 +120,9 @@ class RaidReportBot():
     def filter_tiers(self, raid_list):
         filtered_raids = []
         for raid_info in raid_list:
-            if raid_info["boss"] is not None and raid_info["boss"] in ALLOW_POKEMON:
+            if raid_info["boss"] is not None and raid_info["boss"] in self.allowed_pokemon:
                 filtered_raids.append(raid_info)
-            if raid_info["level"] is not None and int(raid_info["level"]) in BLOCKED_TIERS:
+            if raid_info["level"] is not None and int(raid_info["level"]) in self.blocked_tiers:
                 #print("Filtering raid %s" % raid_info)
                 continue
             else:
@@ -159,9 +132,9 @@ class RaidReportBot():
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            with open(self.raids_scraped_file) as raids_f:
-                raid_list = eval(raids_f.readlines()[0])
-            
+            #with open(self.raids_scraped_file) as raids_f:poke_info
+            #    raid_list = eval(raids_f.readlines()[0])
+            raid_list = scrape_monocle_db(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
@@ -362,23 +335,13 @@ class RaidReportBot():
                 return
             #print("Sent raid command: %s" % create_raid_command)
         
-    async def test_permissions(self):
-        channel = self.regional_channel_dict["santa-apolonia"]
-        while True:
-            print("Checking Permissions")
-            await self.bot.send_message(channel, "TEST2")
-            print("Done Checking")
-            await asyncio.sleep(250)
-        
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
-            print('RaidReportBot Ready')
+            print('UnownBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
-            #self.bot.loop.create_task(self.test_permissions())
-            #await self.read_channel_messages("raid-spotter")
         
         @self.bot.event
         async def on_channel_create(channel):
@@ -412,14 +375,15 @@ class RaidReportBot():
         self.bot.run(self.bot_token)
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        tr_spy_config_path = "./config/tr_spy_config.json"
-    else:
+    fetch_raidmons = False
+    tr_spy_config_path = "./config/tr_spy_config.json"
+    if len(sys.argv) == 2:
+        fetch_raidmons = sys.argv[1]
+    elif len(sys.argv) == 3:
         tr_spy_config_path = sys.argv[1]
+        fetch_raidmons = sys.argv[2]
         
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
     
-    bot_token = tr_spy_config["bot_token"]
-    raids_scraped_file = tr_spy_config["raids_scraped_file"]
-    raid_bot = RaidReportBot(bot_token, raids_scraped_file)
+    raid_bot = UnownBot(tr_spy_config, fetch_raidmons=fetch_raidmons)
