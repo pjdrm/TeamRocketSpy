@@ -16,11 +16,17 @@ import sys
 from asyncio.tasks import sleep
 from monocle_scrapper import scrape_monocle_db
 from urllib.request import urlopen
+from pogo_events_scrapper import PogoEventsScrapper
 
 TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 'hatched': False},\
                {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
+MOVES_EMOJI = '🏹'
+MAP_EMOJI = '🗺'
+SIDEBAR_EMBED_COLOR = 0x5c7ce5
+UNOWN_BOT_ID = 475770444889456640
+BOLOTA_BOT_ID = 401847800276451329
 
 class UnownBot():
     
@@ -32,7 +38,7 @@ class UnownBot():
             self.fetch_raid_bosses()
         with open(tr_spy_config["raidmons_path"]) as f:
             self.raid_bosses = eval(f.readline())
-                        
+        self.pes = PogoEventsScrapper()
         self.tr_spy_config= tr_spy_config
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
@@ -47,8 +53,9 @@ class UnownBot():
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
         self.bot_token = tr_spy_config["bot_token"]
-        self.bot = commands.Bot(command_prefix="%", description='UnownBot')
+        self.bot = commands.Bot(command_prefix="$", description='UnownBot')
         self.raid_messages = {}
+        self.boss_movesets = {"teatro-thalia": ['Dragon Tail', 'Sky Attack']}
         self.run_discord_bot()
     
     def fetch_raid_bosses(self):
@@ -57,7 +64,7 @@ class UnownBot():
         raid_bosses = []
         for poke in pokemon_list:
             if "name" in poke and "tier" in poke:
-                raid_bosses.append(poke["name"])
+                raid_bosses.append(poke["name"].replace("_alola", ""))
         with open(tr_spy_config["raidmons_path"], "w+") as f:
             f.write(str(raid_bosses))
         
@@ -68,6 +75,13 @@ class UnownBot():
             return True
         else:
             return False
+        
+    def is_raid_annouce(self, message):
+            if "Professora Bolota#6934"==str(message.author)\
+                and"to return to this raid's regional channel" in message.content:
+                return True
+            else:
+                return False
                     
     def load_existing_raids(self):
         active_raids = {}
@@ -129,6 +143,13 @@ class UnownBot():
                 filtered_raids.append(raid_info)
         return filtered_raids
     
+    async def add_move_handler(self, channel):
+        async for message in self.bot.logs_from(channel, limit=500):
+                if "Professora Bolota#6934"==str(message.author):
+                    if "to return to this raid's regional channel" in message.content:
+                        if len(message.reactions) == 9:
+                            print("Have moves for %s"%channel.name)
+        
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
@@ -139,6 +160,18 @@ class UnownBot():
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
             await asyncio.sleep(60)
+            
+    async def check_pogo_events(self):
+        while True:
+            time_stamp = dt.now().strftime("%m-%d %H:%M")
+            print("%s Getting Pogo Events"%time_stamp)
+            pogo_events = self.pes.scrape_pogo_events()
+            embed=discord.Embed(title="**Pokemon Go Events:**", color=SIDEBAR_EMBED_COLOR)
+            for pogo_event in pogo_events:
+                embed.add_field(name="<:PokeBall:399568284913106944>"+pogo_event["desc"], value=pogo_event["date"], inline=True)
+            self.pogo_events_embed = embed
+            print(pogo_events)
+            await asyncio.sleep(43200) #12h
         
     async def read_channel_messages(self, channel_name):
         print("read_channel_messages")
@@ -161,7 +194,7 @@ class UnownBot():
                 print(raid_info)
                 #await self.create_raid(raid_info)
         self.check_if_gyms_exist(gyms_to_check)
-                
+        
     def parse_raid_message(self, raid_embed):
         raid_info = {}
         desc_split = raid_embed["description"].split("\n")
@@ -245,9 +278,9 @@ class UnownBot():
                     time_command = "!hatch " + raid_info["raid_starts_in"]
             time.sleep(.7)
             if time_command is not None:
-                time_message = await self.bot.send_message(gym_channel, time_command)
+                time_message = await gym_channel.send(time_command)
                 await asyncio.sleep(0.5)
-                await self.bot.delete_message(time_message)
+                await time_message.delete()
             else:
                 self.no_time_en_raids.append(gym_channel)
             #print("LEAVING RAID " + raid_channel_name)
@@ -268,15 +301,16 @@ class UnownBot():
     def get_attack_type(self, attack):
         return self.type_emojis[self.move_type[attack]]
         
-    async def report_boss_moveset(self, gym_channel, moveset):
+    async def report_boss_moveset(self, gym_channel, moveset, user, user_icon):
         fast_attack = moveset[0]
         fast_attack += " "+self.get_attack_type(fast_attack)
         charge_attack = moveset[1]
         charge_attack += " "+self.get_attack_type(charge_attack)
-        moveset_embed=discord.Embed(title="__**Ataques**__:", color=0x399f21)
-        moveset_embed.add_field(name="Fast", value=fast_attack)
-        moveset_embed.add_field(name="Charge", value=charge_attack)
-        await self.bot.send_message(gym_channel, embed=moveset_embed)
+        moveset_embed=discord.Embed(title="**Boss Attacks**:", color=SIDEBAR_EMBED_COLOR)
+        moveset_embed.add_field(name="Fast", value=fast_attack, inline=True)
+        moveset_embed.add_field(name="Charge", value=charge_attack, inline=True)
+        moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
+        await gym_channel.send(embed=moveset_embed)
         
     async def create_raid(self, raid_info):
         if raid_info["gym_name"] in GYM_TRANSLATION:
@@ -299,6 +333,9 @@ class UnownBot():
                 
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
         is_active_raid = raid_channel_name in self.active_raids
+        
+        if 'move_set' in raid_info:
+            self.boss_movesets[raid_channel_name] = raid_info['move_set']
         #print(raid_channel_name)
         #print(self.active_raids)
         
@@ -307,7 +344,7 @@ class UnownBot():
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
                 time.sleep(1)
-                await self.bot.send_message(gym_channel, "!left "+raid_info["raid_ends_in"])
+                await gym_channel.send("!left "+raid_info["raid_ends_in"])
                 self.no_time_en_raids.pop(raid_channel_name)
             
         if is_active_raid and raid_info["hatched"]:
@@ -315,9 +352,9 @@ class UnownBot():
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
                 #time.sleep(1)
-                boss_message = await self.bot.send_message(gym_channel, "!boss "+raid_info["boss"])
+                boss_message = await gym_channel.send("!boss "+raid_info["boss"])
                 await asyncio.sleep(0.5)
-                await self.bot.delete_message(boss_message)
+                await boss_message.delete()
             #await self.report_boss_moveset(gym_channel, raprinid_info["move_set"])    
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
@@ -325,9 +362,8 @@ class UnownBot():
             disc_channel = self.regional_channel_dict[regional_channel]
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
-            #await asyncio.sleep(10) #I think the permissions issue was because I was sending too many messages
             try:
-                await self.bot.send_message(disc_channel, create_raid_command)
+                await disc_channel.send(create_raid_command)
             except discord.Forbidden as e:
                 print("ERROR: got forbidden exception")
                 print(str(e))
@@ -342,19 +378,44 @@ class UnownBot():
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
+            #self.bot.loop.create_task(self.check_pogo_events())
         
         @self.bot.event
-        async def on_channel_create(channel):
+        async def on_guild_channel_create(channel):
             if channel.name is None:
                 return
             print("New Raid created %s" % channel.name)
             await self.add_active_raid(channel)
             
         @self.bot.event
-        async def on_channel_delete(channel):
+        async def on_guild_channel_delete(channel):
             print("Raid Ended created %s" % channel.name)
             self.remove_active_raid(channel)
             
+        @self.bot.event
+        async def on_raw_reaction_add(payload):
+            if payload.emoji.name == MAP_EMOJI and payload.user_id == BOLOTA_BOT_ID:
+                channel = self.bot.get_channel(payload.channel_id)
+                rc_short_name = self.channel_2_raid_channel_name_short(channel)
+                if rc_short_name not in self.boss_movesets:
+                    return
+                msg = await channel.get_message(payload.message_id)
+                await msg.add_reaction(MOVES_EMOJI)
+                return
+                
+            if payload.emoji.name == MOVES_EMOJI and payload.user_id != UNOWN_BOT_ID: #this Unown bot id. We want to skip its reactions
+                channel = self.bot.get_channel(payload.channel_id)
+                msg = await channel.get_message(payload.message_id)
+                if self.is_raid_annouce(msg):
+                    rc_short_name = self.channel_2_raid_channel_name_short(channel)
+                    if rc_short_name in self.boss_movesets:
+                        member = msg.guild.get_member(payload.user_id)
+                        user = str(member).split('#')[0]
+                        avatar_url = member.avatar_url
+                        await self.report_boss_moveset(channel, self.boss_movesets[rc_short_name], user, avatar_url)
+                        await msg.remove_reaction(MOVES_EMOJI, member)
+                        
+                        
         @self.bot.command()
         async def test(raid_id):
             await self.create_raid(TESTS_RAIDS[int(raid_id)])
@@ -370,7 +431,11 @@ class UnownBot():
             for channel in self.bot.get_all_channels():
                 if channel.name in "#the-bot-lab":
                     print("Going to autonone")
-                    await self.bot.send_message(channel, "!auto none")
+                    await channel.send("!auto none")
+        
+        @self.bot.command(pass_context=True)
+        async def events(ctx):
+            await ctx.message.channel.send(embed=self.pogo_events_embed)
             
         self.bot.run(self.bot_token)
 
