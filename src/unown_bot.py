@@ -417,9 +417,9 @@ class UnownBot():
             await ctx.message.channel.send(embed=self.pogo_events_embed)
             
         @self.bot.event
-        async def on_command_error(error, ctx):
-            #TODO: add logic for the case existing command are not correctly used.
-            return #just to silently ignore unregistred commands
+        async def on_command_error(ctx, error):
+            if isinstance(error, commands.CommandNotFound):
+                return #just to silently ignore unregistred commands
             
         self.bot.run(self.bot_token)
 
