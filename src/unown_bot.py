@@ -268,17 +268,6 @@ class UnownBot():
         if raid_channel_name in self.issued_raids.keys():
             gym_channel = self.get_gym_channel(raid_channel_name)
             raid_info = self.issued_raids[raid_channel_name]
-            '''
-            time_command = None
-            if raid_info["hatched"]:
-                #Sometimes we dont know when raid ends
-                if raid_info["raid_ends_in"] is not None:
-                    time_command = "!left " + raid_info["raid_ends_in"]
-            else:
-                #Sometimes we dont know when egg hatches
-                if raid_info["raid_starts_in"] is not None:
-                    time_command = "!hatch " + raid_info["raid_starts_in"]
-            '''
             #Sometimes we dont know when egg hatches
             if raid_info["raid_starts_in"] is not None:
                 time_command = "!hatch " + raid_info["raid_starts_in"]
