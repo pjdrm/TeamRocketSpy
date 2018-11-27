@@ -24,6 +24,7 @@ TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
 MAP_EMOJI = '🗺'
+WARNING_EMOJI = '⚠'
 SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
 BOLOTA_BOT_ID = 401847800276451329
@@ -44,7 +45,7 @@ class UnownBot():
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
         self.raids_scraped_file = tr_spy_config["raids_scraped_file"]
         self.report_log_file = log_file
-        self.no_time_en_raids = []
+        self.no_time_end_raids = []
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
@@ -267,6 +268,7 @@ class UnownBot():
         if raid_channel_name in self.issued_raids.keys():
             gym_channel = self.get_gym_channel(raid_channel_name)
             raid_info = self.issued_raids[raid_channel_name]
+            '''
             time_command = None
             if raid_info["hatched"]:
                 #Sometimes we dont know when raid ends
@@ -276,15 +278,13 @@ class UnownBot():
                 #Sometimes we dont know when egg hatches
                 if raid_info["raid_starts_in"] is not None:
                     time_command = "!hatch " + raid_info["raid_starts_in"]
-            time.sleep(.7)
-            if time_command is not None:
-                time_message = await gym_channel.send(time_command)
-                await asyncio.sleep(0.5)
-                await time_message.delete()
+            '''
+            #Sometimes we dont know when egg hatches
+            if raid_info["raid_starts_in"] is not None:
+                time_command = "!hatch " + raid_info["raid_starts_in"]
+                await gym_channel.send(time_command, delete_after=2)
             else:
-                self.no_time_en_raids.append(gym_channel)
-            #print("LEAVING RAID " + raid_channel_name)
-            #await self.bot.send_message(gym_channel, "!leave")
+                self.no_time_end_raids.append(gym_channel)
             self.issued_raids.pop(raid_channel_name)
     
     def remove_active_raid(self, channel):
@@ -339,36 +339,26 @@ class UnownBot():
         #print(raid_channel_name)
         #print(self.active_raids)
         
-        if is_active_raid and raid_channel_name in self.no_time_en_raids:
+        if is_active_raid and raid_channel_name in self.no_time_end_raids:
             if raid_info["raid_ends_in"] is not None:
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
                 time.sleep(1)
                 await gym_channel.send("!left "+raid_info["raid_ends_in"])
-                self.no_time_en_raids.pop(raid_channel_name)
+                self.no_time_end_raids.pop(raid_channel_name)
             
         if is_active_raid and raid_info["hatched"]:
             gym_channel = self.get_gym_channel(raid_channel_name)
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
-                #time.sleep(1)
-                boss_message = await gym_channel.send("!boss "+raid_info["boss"])
-                await asyncio.sleep(0.5)
-                await boss_message.delete()
-            #await self.report_boss_moveset(gym_channel, raprinid_info["move_set"])    
+                await gym_channel.send("!boss "+raid_info["boss"], delete_after=2)
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
             print("Creating raid: %s in Regional chanel: %s" % (raid_info, regional_channel))
             disc_channel = self.regional_channel_dict[regional_channel]
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
-            try:
-                await disc_channel.send(create_raid_command)
-            except discord.Forbidden as e:
-                print("ERROR: got forbidden exception")
-                print(str(e))
-                self.bot.login(self.bot_token)
-                return
+            await disc_channel.send(create_raid_command)
             #print("Sent raid command: %s" % create_raid_command)
         
     def run_discord_bot(self):
@@ -378,14 +368,7 @@ class UnownBot():
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
-            #self.bot.loop.create_task(self.check_pogo_events())
-        
-        @self.bot.event
-        async def on_guild_channel_create(channel):
-            if channel.name is None:
-                return
-            print("New Raid created %s" % channel.name)
-            await self.add_active_raid(channel)
+            self.bot.loop.create_task(self.check_pogo_events())
             
         @self.bot.event
         async def on_guild_channel_delete(channel):
@@ -394,14 +377,20 @@ class UnownBot():
             
         @self.bot.event
         async def on_raw_reaction_add(payload):
-            if payload.emoji.name == MAP_EMOJI and payload.user_id == BOLOTA_BOT_ID:
-                channel = self.bot.get_channel(payload.channel_id)
-                rc_short_name = self.channel_2_raid_channel_name_short(channel)
-                if rc_short_name not in self.boss_movesets:
+            if payload.user_id == BOLOTA_BOT_ID:
+                if payload.emoji.name == WARNING_EMOJI:
+                    channel = self.bot.get_channel(payload.channel_id)
+                    print("New Raid created %s" % channel.name)
+                    await self.add_active_raid(channel)
+                    
+                if payload.emoji.name == MAP_EMOJI:
+                    channel = self.bot.get_channel(payload.channel_id)
+                    rc_short_name = self.channel_2_raid_channel_name_short(channel)
+                    if rc_short_name not in self.boss_movesets:
+                        return
+                    msg = await channel.get_message(payload.message_id)
+                    await msg.add_reaction(MOVES_EMOJI)
                     return
-                msg = await channel.get_message(payload.message_id)
-                await msg.add_reaction(MOVES_EMOJI)
-                return
                 
             if payload.emoji.name == MOVES_EMOJI and payload.user_id != UNOWN_BOT_ID: #this Unown bot id. We want to skip its reactions
                 channel = self.bot.get_channel(payload.channel_id)
@@ -414,6 +403,7 @@ class UnownBot():
                         avatar_url = member.avatar_url
                         await self.report_boss_moveset(channel, self.boss_movesets[rc_short_name], user, avatar_url)
                         await msg.remove_reaction(MOVES_EMOJI, member)
+                return
                         
                         
         @self.bot.command()
