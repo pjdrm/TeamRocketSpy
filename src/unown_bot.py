@@ -17,9 +17,7 @@ from asyncio.tasks import sleep
 from monocle_scrapper import scrape_monocle_db
 from urllib.request import urlopen
 from pogo_events_scrapper import PogoEventsScrapper
-
-TESTS_RAIDS = [{'level': '4', 'raid_starts_in': '28', 'gym_name': 'Globo-FCUL', 'hatched': False},\
-               {'raid_ends_in': '8', 'move_set': ['Dragon Tail', 'Sky Attack'], 'hatched': True, 'gym_name': 'Mural Cacilheiro', 'level': '5', 'boss': 'Lugia'}]
+from Cython.Compiler.Errors import message
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
@@ -43,9 +41,9 @@ class UnownBot():
         self.tr_spy_config= tr_spy_config
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
-        self.raids_scraped_file = tr_spy_config["raids_scraped_file"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
+        self.reported_movesets = []
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
@@ -154,8 +152,6 @@ class UnownBot():
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            #with open(self.raids_scraped_file) as raids_f:poke_info
-            #    raid_list = eval(raids_f.readlines()[0])
             raid_list = scrape_monocle_db(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
@@ -163,17 +159,17 @@ class UnownBot():
             await asyncio.sleep(60)
             
     async def check_pogo_events(self):
-        while True:
-            time_stamp = dt.now().strftime("%m-%d %H:%M")
-            print("%s Getting Pogo Events"%time_stamp)
-            pogo_events = self.pes.scrape_pogo_events()
-            embed=discord.Embed(title="**Pokemon Go Events:**", color=SIDEBAR_EMBED_COLOR)
-            for pogo_event in pogo_events:
-                embed.add_field(name="<:PokeBall:399568284913106944>"+pogo_event["desc"], value=pogo_event["date"], inline=True)
-            self.pogo_events_embed = embed
-            print(pogo_events)
-            await asyncio.sleep(43200) #12h
-        
+            while True:
+                time_stamp = dt.now().strftime("%m-%d %H:%M")
+                print("%s Getting Pogo Events"%time_stamp)
+                pogo_events = self.pes.scrape_pogo_events()
+                embed=discord.Embed(title="**Pokemon Go Events:**", color=SIDEBAR_EMBED_COLOR)
+                for pogo_event in pogo_events:
+                    embed.add_field(name="<:PokeBall:399568284913106944>"+pogo_event["desc"], value=pogo_event["date"], inline=True)
+                self.pogo_events_embed = embed
+                print(pogo_events)
+                await asyncio.sleep(43200) #12h
+            
     async def read_channel_messages(self, channel_name):
         print("read_channel_messages")
         #for channel in self.bot.get_all_channels():
@@ -301,6 +297,13 @@ class UnownBot():
         moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
         await gym_channel.send(embed=moveset_embed)
         
+    async def get_raid_annouce(self, gym_channel):
+        async for message in gym_channel.history():
+            if self.is_raid_annouce(message):
+                return message
+        
+        return None
+        
     async def create_raid(self, raid_info):
         if raid_info["gym_name"] in GYM_TRANSLATION:
             gym_trans = GYM_TRANSLATION[raid_info["gym_name"]]
@@ -341,6 +344,12 @@ class UnownBot():
             if gym_channel.name.startswith(("tier")):
                 print("Setting raid boss: %s" % str(raid_info))
                 await gym_channel.send("!boss "+raid_info["boss"], delete_after=2)
+            if raid_channel_name in self.boss_movesets: #case where we first created a raid and later found out the boss moveset
+                raid_annouce_msg = self.get_raid_annouce(gym_channel)
+                if raid_channel_name not in self.reported_movesets and MOVES_EMOJI not in raid_annouce_msg.reactions:
+                    await raid_annouce_msg.add_reaction(MOVES_EMOJI)
+                    self.reported_movesets.append(raid_channel_name)
+                    
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
             print("Creating raid: %s in Regional chanel: %s" % (raid_info, regional_channel))
@@ -348,7 +357,6 @@ class UnownBot():
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
             await disc_channel.send(create_raid_command)
-            #print("Sent raid command: %s" % create_raid_command)
         
     def run_discord_bot(self):
         @self.bot.event
@@ -358,7 +366,7 @@ class UnownBot():
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
-            
+c            
         @self.bot.event
         async def on_guild_channel_delete(channel):
             print("Raid Ended created %s" % channel.name)
@@ -375,13 +383,13 @@ class UnownBot():
                 if payload.emoji.name == MAP_EMOJI:
                     channel = self.bot.get_channel(payload.channel_id)
                     rc_short_name = self.channel_2_raid_channel_name_short(channel)
-                    if rc_short_name not in self.boss_movesets:
+                    if rc_short_name in self.boss_movesets:
+                        msg = await channel.get_message(payload.message_id)
+                        await msg.add_reaction(MOVES_EMOJI)
+                        self.reported_movesets.append(rc_short_name)
                         return
-                    msg = await channel.get_message(payload.message_id)
-                    await msg.add_reaction(MOVES_EMOJI)
-                    return
                 
-            if payload.emoji.name == MOVES_EMOJI and payload.user_id != UNOWN_BOT_ID: #this Unown bot id. We want to skip its reactions
+            if payload.emoji.name == MOVES_EMOJI and payload.user_id != UNOWN_BOT_ID: #this is Unown bot. We want to skip its reactions
                 channel = self.bot.get_channel(payload.channel_id)
                 msg = await channel.get_message(payload.message_id)
                 if self.is_raid_annouce(msg):
@@ -393,11 +401,6 @@ class UnownBot():
                         await self.report_boss_moveset(channel, self.boss_movesets[rc_short_name], user, avatar_url)
                         await msg.remove_reaction(MOVES_EMOJI, member)
                 return
-                        
-                        
-        @self.bot.command()
-        async def test(raid_id):
-            await self.create_raid(TESTS_RAIDS[int(raid_id)])
             
         @self.bot.command()
         async def kb():
