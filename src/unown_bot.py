@@ -17,7 +17,6 @@ from asyncio.tasks import sleep
 from monocle_scrapper import scrape_monocle_db
 from urllib.request import urlopen
 from pogo_events_scrapper import PogoEventsScrapper
-from Cython.Compiler.Errors import message
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
@@ -41,6 +40,8 @@ class UnownBot():
         self.tr_spy_config= tr_spy_config
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
+        self.auto_hatch_flag = self.tr_spy_config["auto_hatch_flag"]
+        self.auto_hatch_boss = self.tr_spy_config["auto_hatch_boss"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
         self.reported_movesets = []
@@ -53,6 +54,7 @@ class UnownBot():
         self.gyms = self.load_gyms("gyms.json", self.region_map)
         self.bot_token = tr_spy_config["bot_token"]
         self.bot = commands.Bot(command_prefix="$", description='UnownBot')
+        self.bot.remove_command("help")
         self.raid_messages = {}
         self.boss_movesets = {"teatro-thalia": ['Dragon Tail', 'Sky Attack']}
         self.run_discord_bot()
@@ -305,6 +307,11 @@ class UnownBot():
         return None
         
     async def create_raid(self, raid_info):
+        if raid_info["boss"] is None and raid_info["level"] == '5' and self.auto_hatch_flag:
+            #print("Auto-hatching tier 5 in %s" % raid_info["gym_name"])
+            raid_info["hatched"] = True
+            raid_info["boss"] = self.auto_hatch_boss
+        
         if raid_info["gym_name"] in GYM_TRANSLATION:
             gym_trans = GYM_TRANSLATION[raid_info["gym_name"]]
             print("Translating gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
@@ -366,7 +373,7 @@ class UnownBot():
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
-c            
+            
         @self.bot.event
         async def on_guild_channel_delete(channel):
             print("Raid Ended created %s" % channel.name)
@@ -377,8 +384,10 @@ c
             if payload.user_id == BOLOTA_BOT_ID:
                 if payload.emoji.name == WARNING_EMOJI:
                     channel = self.bot.get_channel(payload.channel_id)
-                    print("New Raid created %s" % channel.name)
-                    await self.add_active_raid(channel)
+                    if channel.name not in self.regions:
+                        print("New Raid created %s" % channel.name)
+                        #TODO: check auto-hatch
+                        await self.add_active_raid(channel)
                     
                 if payload.emoji.name == MAP_EMOJI:
                     channel = self.bot.get_channel(payload.channel_id)
@@ -418,6 +427,10 @@ c
         @self.bot.command(pass_context=True)
         async def events(ctx):
             await ctx.message.channel.send(embed=self.pogo_events_embed)
+            
+        @self.bot.command(pass_context=True) #TODO: provide an actual list of available commands
+        async def help(ctx, *args):
+            return #Just to override default help and avoid error with Pokenav (ex. $help link)
             
         @self.bot.event
         async def on_command_error(ctx, error):
