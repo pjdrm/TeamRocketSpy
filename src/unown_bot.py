@@ -26,6 +26,16 @@ SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
 BOLOTA_BOT_ID = 401847800276451329
 
+WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa e explicar-te o funcionamento básico deste servidor. O servidor organiza os canais de coordenação de raids por regiões de forma a poderes filtrar facilmente uma grande parte das raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
+  `!iam alameda`\
+  `!iam campo-grande`\
+  `!iam marques`\
+  `!iam zoo`\
+  `!iam belem`\
+  `!iam santa-apolonia`"
+  
+WELCOME2 = "Caso queiras ver todas as regiões podes escrever o comando `!iam all`. No entanto, não recomendamos esta opção devido à grande quantidade de canais de raid. A qualquer momentos podes reconfigurar as regiões que vês. Basta usar o comando `!iamnot <região>` para deixar de a ver (funciona do caso do `all` também).\n\nCoordenar as raids neste servidor é bastante fácil com o bot Professora Bolota. No servidor vais ver canais individuais para as raids que estão activas no momento (por exemplo, #rayquaza-casa-da-moeda). Caso estejas interessado em fazer essa raids só tens de ir ao canal correspondente e clicares no botão :white_check_mark:. A Professora Bolota adicionar-te automaticamente à lista de pessoas que vão à raid. Se houver algum imprevisto e já não podes fazer a raid basta clicar :x:.\n\n**__Todas as raids têm de ser realizadas pessoalmente este servidor NÃO é spoofer firndly.__**\n\nCom a informação anterior estás praticamente pronto, antes de começar pedimos apenas que faças os seguintes passos:\n- Ler o canal #regras-obrigatorio-ler\n- Fazer a configuração inicial da equipa (`!iam <nome_equipa>` no canal #the-bot-lab)\n\nDepois de te habituares ao funcionamento normal do servidor sugerimos que explores outras features que achamos que te podem ser muito úteis. Todas elas estão descritas nos vários canais da categoria Tutoriais Bot. Por exemplo, ser notificado de pokemons/ginásios específicos.\n\nespero que consigas muitas raids com 100% por aqui!"
+
 class UnownBot():
     
     def __init__(self, tr_spy_config,
@@ -431,7 +441,12 @@ class UnownBot():
         @self.bot.command(pass_context=True) #TODO: provide an actual list of available commands
         async def help(ctx, *args):
             return #Just to override default help and avoid error with Pokenav (ex. $help link)
-            
+        
+        @self.bot.event
+        async def on_member_join(member):
+            await member.send(WELCOME1)
+            await member.send(WELCOME2)
+    
         @self.bot.event
         async def on_command_error(ctx, error):
             if isinstance(error, commands.CommandNotFound):
