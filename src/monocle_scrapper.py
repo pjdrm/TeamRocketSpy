@@ -92,6 +92,7 @@ def scrape_monocle_db(config):
         gym_name = get_gym_name(fort_id, cnx)
         if gym_name is None:
             print("ERROR: unknown for id: %d" % fort_id)
+            continue
         raid_starts_in = datetime.datetime.fromtimestamp(time_battle).strftime('%H:%M')
         raid_ends_in = datetime.datetime.fromtimestamp(time_end).strftime('%H:%M')
         
