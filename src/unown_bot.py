@@ -327,7 +327,6 @@ class UnownBot():
             print("Translating gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
             raid_info["gym_name"] = gym_trans
         elif raid_info["gym_name"] not in self.gyms:
-            print("Debug "+raid_info["gym_name"])
             query_match = process.extractOne(raid_info["gym_name"], self.gyms.keys())
             gym_name = query_match[0]
             score = query_match[1]
