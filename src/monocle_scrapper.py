@@ -109,7 +109,7 @@ def scrape_monocle_db(config):
     cnx.close()
     return raid_list
 
-MOVE_DICT = load_move_protos("/home/pjdrm/eclipse-workspace/TeamRocketSpy/config/proto_moves.json")
+MOVE_DICT = load_move_protos("./config/proto_moves.json")
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
