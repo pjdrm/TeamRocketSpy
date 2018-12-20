@@ -9,6 +9,16 @@ import datetime
 from datetime import datetime as dt, timedelta
 import sys
 
+def load_move_protos(move_protos_file):
+    with open(move_protos_file) as data_file:    
+        moves_dict = json.load(data_file)
+    moves_dict = {v: k for k, v in moves_dict.items()}
+    moves_dict_final = {}
+    for id in moves_dict:
+        move_name = moves_dict[id].replace("_", " ").title()
+        moves_dict_final[id] = move_name
+    return moves_dict_final
+        
 def get_gym_name(fort_id, cnx):
     cursor = cnx.cursor()
     query = "select name from forts where id="+str(fort_id)+";"
@@ -67,12 +77,12 @@ def scrape_monocle_db(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT fort_id, level, pokemon_id, time_battle, time_end FROM raids"
+    query = "SELECT fort_id, level, pokemon_id, time_battle, time_end, move_1, move_2 FROM raids"
     cursor.execute(query)
     
     raid_list = []
     
-    for (fort_id, level, pokemon_id, time_battle, time_end) in cursor:
+    for (fort_id, level, pokemon_id, time_battle, time_end, move_1, move_2) in cursor:
         hatched = False
         boss = None
         if pokemon_id is not None:
@@ -80,6 +90,8 @@ def scrape_monocle_db(config):
             hatched = True
             
         gym_name = get_gym_name(fort_id, cnx)
+        if gym_name is None:
+            print("ERROR: unknown for id: %d" % fort_id)
         raid_starts_in = datetime.datetime.fromtimestamp(time_battle).strftime('%H:%M')
         raid_ends_in = datetime.datetime.fromtimestamp(time_end).strftime('%H:%M')
         
@@ -89,12 +101,16 @@ def scrape_monocle_db(config):
                      'raid_ends_in': raid_ends_in,
                      'gym_name': gym_name,
                      'hatched': hatched}
+        if move_1 is not None:
+            raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2]]
         if is_present_raid(raid_dict):
             raid_list.append(raid_dict)
         
     cnx.close()
     return raid_list
-    
+
+MOVE_DICT = load_move_protos("/home/pjdrm/eclipse-workspace/TeamRocketSpy/config/proto_moves.json")
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         tr_spy_config_path = "./config/tr_spy_config.json"

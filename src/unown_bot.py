@@ -66,7 +66,7 @@ class UnownBot():
         self.bot = commands.Bot(command_prefix="$", description='UnownBot')
         self.bot.remove_command("help")
         self.raid_messages = {}
-        self.boss_movesets = {"teatro-thalia": ['Dragon Tail', 'Sky Attack']}
+        self.boss_movesets = {}
         self.run_discord_bot()
     
     def fetch_raid_bosses(self):
@@ -327,6 +327,7 @@ class UnownBot():
             print("Translating gym: %s to: %s" % (raid_info["gym_name"], gym_trans))
             raid_info["gym_name"] = gym_trans
         elif raid_info["gym_name"] not in self.gyms:
+            print("Debug "+raid_info["gym_name"])
             query_match = process.extractOne(raid_info["gym_name"], self.gyms.keys())
             gym_name = query_match[0]
             score = query_match[1]
