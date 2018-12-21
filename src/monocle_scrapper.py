@@ -8,6 +8,7 @@ import json
 import datetime
 from datetime import datetime as dt, timedelta
 import sys
+import math
 
 def load_move_protos(move_protos_file):
     with open(move_protos_file) as data_file:    
@@ -63,6 +64,43 @@ def is_present_raid(raid_info):
             return False
     else:
         return True
+def populate_gym_name(fort_id, db_config):
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor(buffered=True)
+    query = "SELECT lat, lon FROM forts where id = "+str(fort_id)
+    cursor.execute(query)
+    lat_mitm = None
+    lon_mitm = None
+    for (lat, lon) in cursor:
+        lat_mitm = lat
+        lon_mitm = lon
+    
+    with open(GYMS_INFO) as gyms_f:    
+        gym_info = json.load(gyms_f)
+        
+    shortest_dist = 99999
+    gym_name = None
+    for gym_id in gym_info:
+        lat = gym_info[gym_id]["latitude"]
+        lon = gym_info[gym_id]["longitude"]
+        dist = math.sqrt(((lat_mitm-lat)**2)+((lon_mitm-lon)**2))
+        if dist < shortest_dist and dist < 0.001:
+            shortest_dist = dist
+            gym_name = gym_info[gym_id]["name"]
+    cursor.close()
+    
+    found_name = False
+    if gym_name is not None:
+        found_name = True
+        query = 'UPDATE forts SET name="'+gym_name+'" WHERE id = '+str(fort_id)
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor(buffered=True)
+        cursor.execute(query)
+        cursor.close()
+        print("Found new gym: %s"% gym_name)
+    else:
+        print("WARNING: could not find gym: %d" % fort_id)
+    return found_name, gym_name
 
 def scrape_monocle_db(config):
     with open(config["poke_info"]) as f:
@@ -71,7 +109,8 @@ def scrape_monocle_db(config):
                   "password": config["password"],
                   "host": config["host"],
                   "database": config["database"],
-                  "raise_on_warnings": True}
+                  "raise_on_warnings": True,
+                  "autocommit": True}
     
     print("Starting Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
@@ -92,7 +131,9 @@ def scrape_monocle_db(config):
         gym_name = get_gym_name(fort_id, cnx)
         if gym_name is None:
             print("ERROR: unknown for id: %d" % fort_id)
-            continue
+            found_gym, gym_name = populate_gym_name(fort_id, db_config)
+            if not found_gym:
+                continue
         raid_starts_in = datetime.datetime.fromtimestamp(time_battle).strftime('%H:%M')
         raid_ends_in = datetime.datetime.fromtimestamp(time_end).strftime('%H:%M')
         
@@ -110,6 +151,7 @@ def scrape_monocle_db(config):
     cnx.close()
     return raid_list
 
+GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")
 
 if __name__ == "__main__":
