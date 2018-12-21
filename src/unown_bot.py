@@ -90,7 +90,7 @@ class UnownBot():
             return False
         
     def is_raid_annouce(self, message):
-            if self.bolota_usr_str == str(message.author)\
+            if self.bolota_user_str == str(message.author)\
                 and"to return to this raid's regional channel" in message.content:
                 return True
             else:
