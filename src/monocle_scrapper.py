@@ -143,7 +143,7 @@ def scrape_monocle_db(config):
                      'raid_ends_in': raid_ends_in,
                      'gym_name': gym_name,
                      'hatched': hatched}
-        if move_1 is not None:
+        if pokemon_id is not None:
             raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2]]
         if is_present_raid(raid_dict):
             raid_list.append(raid_dict)
