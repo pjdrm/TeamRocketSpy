@@ -24,7 +24,6 @@ MAP_EMOJI = '🗺'
 WARNING_EMOJI = '⚠'
 SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
-BOLOTA_BOT_ID = 401847800276451329
 
 WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa e explicar-te o funcionamento básico deste servidor. O servidor organiza os canais de coordenação de raids por regiões de forma a poderes filtrar facilmente uma grande parte das raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
   `!iam alameda`\
@@ -52,6 +51,9 @@ class UnownBot():
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
         self.auto_hatch_flag = self.tr_spy_config["auto_hatch_flag"]
         self.auto_hatch_boss = self.tr_spy_config["auto_hatch_boss"]
+        self.bolota_user_str = self.tr_spy_config["bolota_user_str"]
+        self.bolota_id = self.tr_spy_config["bolota_id"]
+        self.unown_bot_id = self.tr_spy_config["unown_id"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
         self.reported_movesets = []
@@ -88,7 +90,7 @@ class UnownBot():
             return False
         
     def is_raid_annouce(self, message):
-            if "Professora Bolota#6934"==str(message.author)\
+            if self.bolota_usr_str == str(message.author)\
                 and"to return to this raid's regional channel" in message.content:
                 return True
             else:
@@ -391,7 +393,7 @@ class UnownBot():
             
         @self.bot.event
         async def on_raw_reaction_add(payload):
-            if payload.user_id == BOLOTA_BOT_ID:
+            if payload.user_id == self.bolota_id:
                 if payload.emoji.name == WARNING_EMOJI:
                     channel = self.bot.get_channel(payload.channel_id)
                     if channel.name not in self.regions:
@@ -408,7 +410,7 @@ class UnownBot():
                         self.reported_movesets.append(rc_short_name)
                         return
                 
-            if payload.emoji.name == MOVES_EMOJI and payload.user_id != UNOWN_BOT_ID: #this is Unown bot. We want to skip its reactions
+            if payload.emoji.name == MOVES_EMOJI and payload.user_id != self.unown_bot_id: #this is Unown bot. We want to skip its reactions
                 channel = self.bot.get_channel(payload.channel_id)
                 msg = await channel.get_message(payload.message_id)
                 if self.is_raid_annouce(msg):
