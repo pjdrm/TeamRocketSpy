@@ -16,7 +16,7 @@ def load_move_protos(move_protos_file):
     moves_dict = {v: k for k, v in moves_dict.items()}
     moves_dict_final = {}
     for id in moves_dict:
-        move_name = moves_dict[id].replace("_", " ").title()
+        move_name = moves_dict[id].replace("_FAST", "").replace("_", " ").title()
         moves_dict_final[id] = move_name
     return moves_dict_final
         
