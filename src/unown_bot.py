@@ -364,7 +364,7 @@ class UnownBot():
                 print("Setting raid boss: %s" % str(raid_info))
                 await gym_channel.send("!boss "+raid_info["boss"], delete_after=2)
             if raid_channel_name in self.boss_movesets: #case where we first created a raid and later found out the boss moveset
-                raid_annouce_msg = self.get_raid_annouce(gym_channel)
+                raid_annouce_msg = await self.get_raid_annouce(gym_channel)
                 if raid_channel_name not in self.reported_movesets and MOVES_EMOJI not in raid_annouce_msg.reactions:
                     await raid_annouce_msg.add_reaction(MOVES_EMOJI)
                     self.reported_movesets.append(raid_channel_name)
