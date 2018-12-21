@@ -128,7 +128,7 @@ class UnownBot():
     def load_regional_channels(self, regions):
         regional_channels = {}
         for channel in self.bot.get_all_channels():
-            if channel.name in regions:
+            if hasattr(channel, 'send')  and channel.name in regions: #hack to avoid categories
                 regional_channels[channel.name] = channel
         return regional_channels
     
@@ -371,7 +371,7 @@ class UnownBot():
                     
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
-            print("Creating raid: %s in Regional chanel: %s" % (raid_info, regional_channel))
+            print("Creating raid: %s in Regional channel: %s" % (raid_info, regional_channel))
             disc_channel = self.regional_channel_dict[regional_channel]
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
