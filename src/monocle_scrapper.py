@@ -11,7 +11,7 @@ import sys
 import math
 
 def load_move_protos(move_protos_file):
-    with open(move_protos_file) as data_file:    
+    with open(move_protos_file) as data_file:
         moves_dict = json.load(data_file)
     moves_dict = {v: k for k, v in moves_dict.items()}
     moves_dict_final = {}
