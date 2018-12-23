@@ -20,7 +20,6 @@ class PogoEventsScrapper():
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('disable-infobars')
         chrome_options.add_argument('--disable-extensions')
-        chrome_options.add_argument('--no-sandbox')
         
         chrome_driver = "./chromedriver"
         self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
