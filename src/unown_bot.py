@@ -288,9 +288,10 @@ class UnownBot():
     
     def remove_active_raid(self, channel):
         rc_short_name = self.channel_2_raid_channel_name_short(channel)
+        if rc_short_name in self.boss_movesets:
+            self.boss_movesets.pop(rc_short_name)
         if rc_short_name in self.active_raids:
             self.active_raids.pop(rc_short_name)
-            self.boss_movesets[rc_short_name]
         else:
             print("ERROR: cant find %s in:\n%s"%(rc_short_name, self.active_raids))
             
