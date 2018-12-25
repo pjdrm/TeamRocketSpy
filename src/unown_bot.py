@@ -368,7 +368,6 @@ class UnownBot():
                 raid_annouce_msg = await self.get_raid_annouce(gym_channel)
                 if MOVES_EMOJI not in raid_annouce_msg.reactions:
                     await raid_annouce_msg.add_reaction(MOVES_EMOJI)
-                    self.reported_movesets.append(raid_channel_name)
                     
         elif not is_active_raid:
             regional_channel = self.get_regional_channel(raid_info["gym_name"])
