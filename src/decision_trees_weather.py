@@ -99,7 +99,7 @@ def match_ingame_weather(ingame_weather, time_stamp, h, s2cell_lk):
     ts_h = int(ts_split[1][0:2])
     h_split = h.split(" ")
     tc = int(h_split[1].replace("tc", ""))
-    date_1 = datetime.datetime.strptime(ts_split[0], "%m-%d-%y")
+    date_1 = datetime.datetime.strptime(ts_split[0], "%d-%m-%y")
     if tc >= 24:
         #its the next day
         date_1 = date_1 + datetime.timedelta(days=1)
@@ -108,7 +108,7 @@ def match_ingame_weather(ingame_weather, time_stamp, h, s2cell_lk):
         date_1 = date_1 + datetime.timedelta(days=1)
     
     h_24 = datetime.datetime.strptime(h_split[0], '%I%p').strftime('%H')
-    date_str = date_1.strftime('%m-%d-%y')+" "+h_24
+    date_str = date_1.strftime('%d-%m-%y')+" "+h_24
     if date_str in ingame_weather[s2cell_lk]:
         return int(ingame_weather[s2cell_lk][date_str])
     else:
@@ -152,6 +152,10 @@ def load_ingame_weather(ingame_log, s2id2lk):
         lin_split = lin.split(" ")
         s2cell_id = lin_split[3]
         weather_condition = lin_split[5]
+        if weather_condition == '11':
+            weather_condition = '1' #merging Clear in Sunny weather since they are the same
+        elif weather_condition == '13':
+            weather_condition = '3' #merging Partly Cloudy (night) in Partly Cloudy since they are the same
         time_stamp = lin_split[7]+" "+lin_split[8][0:2]
         s2cell_lk = s2id2lk[s2cell_id]
         cell_ig_weather = ingame_weather[s2cell_lk]
@@ -165,6 +169,7 @@ def learn_decision_tree(datasets):
     best_X = None
     best_Y = None
     best_h = None
+    results_str = ""
     for d_k in datasets:
         dataset = np.vstack(datasets[d_k])
         X = dataset[:,0:-1]
@@ -174,6 +179,7 @@ def learn_decision_tree(datasets):
         clf = tree.DecisionTreeClassifier(criterion='entropy')
         scores = cross_val_score(clf, X, Y, cv=n_folds)
         avg = np.average(scores)
+        results_str += "Model: "+d_k+" Cross_val_score "+str(avg)+"\n"
         if avg > best_avg:
             best_avg = avg
             best_X = X
@@ -205,7 +211,8 @@ def learn_decision_tree(datasets):
         for j in range(conf_mat.shape[1]):
             cm_str += str(conf_mat[i][j])+'\t'
         cm_str += '\n'
-        
+    
+    print(results_str)
     print(cm_str)
     print("Best AVG accuracy: %f\nBest time to get Accu weather: %sh" %(best_avg, best_h))
     dot_data = StringIO()

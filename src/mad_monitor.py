@@ -79,6 +79,6 @@ class MADMonitor():
         threading.Timer(405, self.check_mad).start()#need to give scanner time to get back up before checking again
 
 madctl_path = '/home/pjdrm/Desktop/MADctl/'
-log_file = '/home/pjdrm/eclipse-workspace/TeamRocketSpy/madctl_monitor.log' 
+log_file = '/home/pjdrm/workspace/TeamRocketSpy/madctl_monitor.log' 
 mon = MADMonitor(log_file, madctl_path)
 mon.check_mad()
