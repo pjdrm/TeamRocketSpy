@@ -56,7 +56,6 @@ class UnownBot():
         self.unown_bot_id = self.tr_spy_config["unown_id"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
-        self.reported_movesets = []
         self.issued_raids = {}
         self.active_raids = None
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
@@ -367,7 +366,7 @@ class UnownBot():
                 await gym_channel.send("!boss "+raid_info["boss"], delete_after=2)
             if raid_channel_name in self.boss_movesets: #case where we first created a raid and later found out the boss moveset
                 raid_annouce_msg = await self.get_raid_annouce(gym_channel)
-                if raid_channel_name not in self.reported_movesets and MOVES_EMOJI not in raid_annouce_msg.reactions:
+                if MOVES_EMOJI not in raid_annouce_msg.reactions:
                     await raid_annouce_msg.add_reaction(MOVES_EMOJI)
                     self.reported_movesets.append(raid_channel_name)
                     
@@ -409,7 +408,6 @@ class UnownBot():
                     if rc_short_name in self.boss_movesets:
                         msg = await channel.get_message(payload.message_id)
                         await msg.add_reaction(MOVES_EMOJI)
-                        self.reported_movesets.append(rc_short_name)
                         return
                 
             if payload.emoji.name == MOVES_EMOJI and payload.user_id != self.unown_bot_id: #this is Unown bot. We want to skip its reactions
