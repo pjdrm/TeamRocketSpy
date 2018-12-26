@@ -179,7 +179,7 @@ def learn_decision_tree(datasets):
         clf = tree.DecisionTreeClassifier(criterion='entropy')
         scores = cross_val_score(clf, X, Y, cv=n_folds)
         avg = np.average(scores)
-        results_str += "Model: "+d_k+" Cross_val_score "+str(avg)+"\n"
+        results_str += "Model: "+d_k+" Cross_val_score "+str(avg)+" #instances: "+str(Y.shape[0])+"\n"
         if avg > best_avg:
             best_avg = avg
             best_X = X
