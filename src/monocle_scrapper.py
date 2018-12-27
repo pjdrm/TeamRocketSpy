@@ -103,6 +103,10 @@ def populate_gym_name(fort_id, db_config):
     return found_name, gym_name
 
 def scrape_monocle_db(config):
+    current_hour = int(dt.now().strftime("%H"))
+    if current_hour < 9:
+        return [] #dont want to report and trigger notifications too early, might annoy users
+    
     with open(config["poke_info"]) as f:
         poke_info = json.load(f)
     db_config = { "user": config["user"],
