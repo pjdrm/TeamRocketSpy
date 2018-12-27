@@ -36,6 +36,8 @@ class PogoEventsScrapper():
             split_str = event_desc.split("\n")
             if len(split_str) == 3:
                 date_split = split_str[2].split(" ")
+            elif len(split_str) == 1:
+                continue #seems to be the case where they have an event but no date
             else:
                 date_split = split_str[1].split(" ")
             date = date_split[0]+" "+date_split[1]+" "+date_split[4]
