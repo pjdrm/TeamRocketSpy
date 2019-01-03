@@ -306,7 +306,7 @@ class UnownBot():
         fast_attack += " "+self.get_attack_type(fast_attack)
         charge_attack = moveset[1]
         charge_attack += " "+self.get_attack_type(charge_attack)
-        moveset_embed=discord.Embed(title="**Boss Attacks**:", color=SIDEBAR_EMBED_COLOR)
+        moveset_embed=discord.Embed(title="**Raid Boss Moves**:", color=SIDEBAR_EMBED_COLOR)
         moveset_embed.add_field(name="Fast", value=fast_attack, inline=True)
         moveset_embed.add_field(name="Charge", value=charge_attack, inline=True)
         moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
