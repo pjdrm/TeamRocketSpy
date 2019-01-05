@@ -37,7 +37,7 @@ class WeatherBot():
         self.emoji_dict = {}
         self.weather_forecast = {}
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
