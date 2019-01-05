@@ -37,7 +37,7 @@ class WeatherBot():
         self.emoji_dict = {}
         self.weather_forecast = {}
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
@@ -46,6 +46,8 @@ class WeatherBot():
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('disable-infobars')
         chrome_options.add_argument('--disable-extensions')
+        PROXY = "154.73.65.129:30713"
+        chrome_options.add_argument('--proxy-server=http://%s' % PROXY)
         
         chrome_driver = "./chromedriver"
         self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
