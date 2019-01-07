@@ -132,6 +132,10 @@ class WeatherBot():
         if len(add_button) > 0:
             print("clicking add button")
             add_button[0].click()
+        if len(driver.find_elements_by_xpath('//*[@id="detail-hourly"]/div/div[2]/table/thead/tr/td[1]/div[1]')) == 0:
+            print("WARNING: failed to get forecast, retrying")
+            self.scrape_forecast(self, driver, url, weather_forecast, time_carry)
+            
         for h in range(1,9):
             w_hour, hour_forecast_dict  = self.get_hour_forecast(driver, h)
             weather_forecast[w_hour+' tc'+str(time_carry)] = hour_forecast_dict
