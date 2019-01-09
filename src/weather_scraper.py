@@ -37,7 +37,7 @@ class WeatherBot():
         self.emoji_dict = {}
         self.weather_forecast = {}
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--enable-javascript")
         chrome_options.add_argument("user-agent=WIP")
@@ -134,6 +134,7 @@ class WeatherBot():
             add_button[0].click()
         if len(driver.find_elements_by_xpath('//*[@id="detail-hourly"]/div/div[2]/table/thead/tr/td[1]/div[1]')) == 0:
             print("WARNING: failed to get forecast, retrying")
+            driver.save_screenshot('screenie.png')
             self.scrape_forecast(driver, url, weather_forecast, time_carry, retry=True)
             
         for h in range(1,9):
