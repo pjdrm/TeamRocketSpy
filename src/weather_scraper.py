@@ -121,8 +121,8 @@ class WeatherBot():
             forecast_cache.append((time_stamp, forecast))
         return forecast_cache
     
-    def scrape_forecast(self, driver, url, weather_forecast, time_carry):
-        if time_carry > 0:
+    def scrape_forecast(self, driver, url, weather_forecast, time_carry, retry=False):
+        if time_carry > 0 and not retry:
             url += '?hour='+str(time_carry)
         print(url)
         driver.get(url)
@@ -134,7 +134,7 @@ class WeatherBot():
             add_button[0].click()
         if len(driver.find_elements_by_xpath('//*[@id="detail-hourly"]/div/div[2]/table/thead/tr/td[1]/div[1]')) == 0:
             print("WARNING: failed to get forecast, retrying")
-            self.scrape_forecast(driver, url, weather_forecast, time_carry)
+            self.scrape_forecast(driver, url, weather_forecast, time_carry, retry=True)
             
         for h in range(1,9):
             w_hour, hour_forecast_dict  = self.get_hour_forecast(driver, h)

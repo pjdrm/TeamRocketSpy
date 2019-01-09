@@ -6,9 +6,9 @@ Created on Nov 14, 2018
 import numpy as np
 import datetime
 from sklearn import tree
-from sklearn.cross_validation import cross_val_score
+from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
-from sklearn.cross_validation import cross_val_predict
+from sklearn.model_selection import cross_val_predict
 from sklearn.externals.six import StringIO
 import pydotplus
 
@@ -171,10 +171,14 @@ def learn_decision_tree(datasets):
     best_h = None
     results_str = ""
     for d_k in datasets:
+        if len(datasets[d_k]) == 0:
+            print("WARNING: 0 data points for model %s" % d_k)
+            continue
         dataset = np.vstack(datasets[d_k])
         X = dataset[:,0:-1]
         Y = dataset[:,-1]
         if Y.shape[0] <= n_folds*2:
+            print("WARNING: not enough data points for model %s" % d_k)
             continue
         clf = tree.DecisionTreeClassifier(criterion='entropy')
         scores = cross_val_score(clf, X, Y, cv=n_folds)
@@ -225,9 +229,9 @@ def learn_decision_tree(datasets):
     graph.write_pdf("dt_test.pdf")
     
     
-ingame_log = "./weather_forecasts/ingame/forecast_log.txt"
+ingame_log = "/home/pjdrm/Desktop/PgL/weather_forecasts/ingame/forecast_log.txt"
 ingame_weather = load_ingame_weather(ingame_log, S2ID_2_LK)
 
-acc_log = "./weather_forecasts/acu/forecast_log.txt"
+acc_log = "/home/pjdrm/Desktop/PgL/weather_forecasts/acu/forecast_log.txt"
 load_features(acc_log, ingame_weather)
         
