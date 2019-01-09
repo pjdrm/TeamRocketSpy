@@ -46,7 +46,7 @@ class WeatherBot():
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('disable-infobars')
         chrome_options.add_argument('--disable-extensions')
-        PROXY = "154.73.65.129:30713"
+        PROXY = self.tr_config["proxy"]
         chrome_options.add_argument('--proxy-server=http://%s' % PROXY)
         
         chrome_driver = "./chromedriver"
