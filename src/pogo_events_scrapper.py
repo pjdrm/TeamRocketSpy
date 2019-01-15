@@ -72,4 +72,4 @@ class PogoEventsScrapper():
             pogo_event_list.append({"desc": desc, "date": date})
         return pogo_event_list
             
-PogoEventsScrapper().scrape_pogo_events()
+#PogoEventsScrapper().scrape_pogo_events()

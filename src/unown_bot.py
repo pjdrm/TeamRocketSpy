@@ -382,9 +382,9 @@ class UnownBot():
         @self.bot.event
         async def on_ready():
             print('UnownBot Ready')
-            self.regional_channel_dict = self.load_regional_channels(self.regions)
-            self.active_raids = self.load_existing_raids()
-            self.bot.loop.create_task(self.check_scraped_raids())
+            #self.regional_channel_dict = self.load_regional_channels(self.regions)
+            #self.active_raids = self.load_existing_raids()
+            #self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
             
         @self.bot.event
