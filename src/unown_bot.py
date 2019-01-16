@@ -16,7 +16,6 @@ import sys
 from asyncio.tasks import sleep
 from monocle_scrapper import scrape_monocle_db
 from urllib.request import urlopen
-from pogo_events_scrapper import PogoEventsScrapper
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
@@ -46,7 +45,6 @@ class UnownBot():
             self.fetch_raid_bosses()
         with open(tr_spy_config["raidmons_path"]) as f:
             self.raid_bosses = eval(f.readline())
-        self.pes = PogoEventsScrapper()
         self.tr_spy_config= tr_spy_config
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
@@ -55,6 +53,7 @@ class UnownBot():
         self.bolota_user_str = self.tr_spy_config["bolota_user_str"]
         self.bolota_id = self.tr_spy_config["bolota_id"]
         self.unown_bot_id = self.tr_spy_config["unown_id"]
+        self.pogo_events_fp = self.tr_spy_config["pogo_events"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
         self.issued_raids = {}
@@ -176,7 +175,8 @@ class UnownBot():
             while True:
                 time_stamp = dt.now().strftime("%m-%d %H:%M")
                 print("%s Getting Pogo Events"%time_stamp)
-                pogo_events = self.pes.scrape_pogo_events()
+                with open(self.pogo_events_fp) as f:
+                    pogo_events = eval(f.readline())
                 embed=discord.Embed(title="**Pokemon Go Events:**", color=SIDEBAR_EMBED_COLOR)
                 for pogo_event in pogo_events:
                     embed.add_field(name="<:PokeBall:399568284913106944>"+pogo_event["desc"], value=pogo_event["date"], inline=True)
