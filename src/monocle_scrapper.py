@@ -98,8 +98,8 @@ def populate_gym_name(fort_id, db_config):
         cursor.execute(query)
         cursor.close()
         print("Found new gym: %s"% gym_name)
-    else:
-        print("WARNING: could not find gym: %d" % fort_id)
+    #else:
+    #    print("WARNING: could not find gym: %d" % fort_id)
     return found_name, gym_name
 
 def scrape_monocle_db(config):
