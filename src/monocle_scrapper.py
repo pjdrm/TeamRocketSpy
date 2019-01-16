@@ -134,7 +134,7 @@ def scrape_monocle_db(config):
             
         gym_name = get_gym_name(fort_id, cnx)
         if gym_name is None:
-            print("WARNING: unknown for id: %d" % fort_id)
+            #print("WARNING: unknown for id: %d" % fort_id)
             found_gym, gym_name = populate_gym_name(fort_id, db_config)
             if not found_gym:
                 continue
