@@ -148,6 +148,9 @@ class WeatherBot():
         current_hour = int(current_time_stamp.strftime('%H'))
         current_time_stamp = current_time_stamp.strftime('%d-%m-%y %H:%M')
         
+        if self.scrape_mad:
+            self.scrape_in_game_weather(current_time_stamp)
+            
         if self.scrape_accu:
             self.weather_forecast = {}
             with open(self.log_file, "a+") as log_f:
@@ -160,8 +163,7 @@ class WeatherBot():
                     log_f.write("Time stamp: %s s2cell: %s Forecast: %s\n" % (current_time_stamp, s2cel_id, str(self.weather_forecast)))
             print("Accu weather scraped at %s" % (current_time_stamp))
             #driver.close()
-        if self.scrape_mad:
-            self.scrape_in_game_weather(current_time_stamp)
+        
         
     def get_debug_weather_reports(self, h):
         debug_pogo_weather1 = ""
