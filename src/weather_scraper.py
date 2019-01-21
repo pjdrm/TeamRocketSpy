@@ -135,6 +135,7 @@ class WeatherBot():
         if len(driver.find_elements_by_xpath('//*[@id="detail-hourly"]/div/div[2]/table/thead/tr/td[1]/div[1]')) == 0:
             print("WARNING: failed to get forecast, retrying")
             driver.save_screenshot('screenie.png')
+            time.sleep(15)
             self.scrape_forecast(driver, url, weather_forecast, time_carry, retry=True)
             
         for h in range(1,9):
