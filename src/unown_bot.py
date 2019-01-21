@@ -24,7 +24,7 @@ WARNING_EMOJI = '⚠'
 SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
 
-WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa. Caso te tenhas juntado ao servidor para fazer a inscrição no torneio PvP consulta os canais #anuncios e #boulder-cup-19Jan. O servidor também é usado para a coordenação de raids e está organizado por regiões de forma a poderes filtrar raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
+WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa e explicar-te a organização do servidor. O servidor está organizado por regiões de forma a poderes filtrar raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
   `!iam alameda`\
   `!iam parque-das-nacoes`\
   `!iam campo-grande`\
