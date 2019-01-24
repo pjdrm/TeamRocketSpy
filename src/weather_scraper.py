@@ -46,8 +46,8 @@ class WeatherBot():
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('disable-infobars')
         chrome_options.add_argument('--disable-extensions')
-        PROXY = self.tr_config["proxy"]
-        chrome_options.add_argument('--proxy-server=http://%s' % PROXY)
+        #PROXY = self.tr_config["proxy"]
+        #chrome_options.add_argument('--proxy-server=http://%s' % PROXY)
         
         chrome_driver = "./chromedriver"
         self.driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
@@ -159,7 +159,7 @@ class WeatherBot():
                     self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, 0)
                     self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+8)
                     self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+16)
-                    self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+24)
+                    #self.scrape_forecast(self.driver, accu_s2cell_url, self.weather_forecast, current_hour+24)
                     s2cel_id = accu_s2cell_url.split('/')[-1]
                     log_f.write("Time stamp: %s s2cell: %s Forecast: %s\n" % (current_time_stamp, s2cel_id, str(self.weather_forecast)))
             print("Accu weather scraped at %s" % (current_time_stamp))

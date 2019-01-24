@@ -28,7 +28,8 @@ FEAT_MAP = {'Cloudy': 0,
             'Sunny': 6,
             'Mostly Sunny': 7,
             'Partly Sunny': 8,
-            'Clear': 9}
+            'Clear': 9,
+            'Fog': 10}
 
 VAL_BREAK_PTS = {'wind_speed': 20,
                  'snow_prob': 80,
@@ -58,6 +59,17 @@ def get_features(feat_names,
     for i, f_name in enumerate(feat_names):
         i = len(feat_map)+i-1
         val = forecast_log[f_name]
+        if f_name == "forecast_desc":
+            i = feat_map[val]
+            feat_arr[i] = 1
+            continue
+        elif f_name == "snow_prob":
+            val = float(val[:-1])
+        elif f_name == "visibility":
+            val = float(val.split(" ")[0])
+        elif f_name == "cloud_cover":
+                val = float(val[:-1])
+        '''
         if f_name == "wind_speed":
             if val >= val_break_pts[f_name]:
                 val = 1
@@ -91,6 +103,7 @@ def get_features(feat_names,
                     val = 1
                 else:
                     val = 0
+        '''
         feat_arr[i] = int(val)
     return feat_arr
 
@@ -100,6 +113,8 @@ def match_ingame_weather(ingame_weather, time_stamp, h, s2cell_lk):
     h_split = h.split(" ")
     tc = int(h_split[1].replace("tc", ""))
     date_1 = datetime.datetime.strptime(ts_split[0], "%d-%m-%y")
+    if tc-ts_h == 24: #For some time I scraped predictions over 24h period, which should be discarded
+        return -1
     if tc >= 24:
         #its the next day
         date_1 = date_1 + datetime.timedelta(days=1)
@@ -119,7 +134,10 @@ def load_features(acc_log, ingame_weather):
         lins = f.readlines()
         
     datasets = {}
+    processed_forecasts = {}
     for lin in lins:
+        if lin == "\n":
+            continue
         lin_split = lin.split(" ")
         time_stamp = lin_split[2]+" "+lin_split[3]
         s2cell = lin_split[5]
@@ -127,6 +145,14 @@ def load_features(acc_log, ingame_weather):
         time_stamp_h = lin_split[3][0:2]
         if time_stamp_h not in datasets:
             datasets[time_stamp_h] = []
+        
+        ts_split = time_stamp.split(" ")
+        ts_h = ts_split[1][0:2]
+        forecast_key = ts_split[0]+" "+ts_h 
+        if forecast_key not in processed_forecasts:
+                processed_forecasts[forecast_key] = True
+        else:
+            continue #We already seen this forecast
             
         for h in forecasts:
             feat_arr = get_features(FEAT_NAMES,
@@ -134,6 +160,8 @@ def load_features(acc_log, ingame_weather):
                                     FEAT_MAP,
                                     VAL_BREAK_PTS)
             Y = match_ingame_weather(ingame_weather, time_stamp, h, s2cell)
+            if time_stamp_h == '11' and Y == 5:
+                Y = match_ingame_weather(ingame_weather, time_stamp, h, s2cell)
             if Y != -1:
                 feat_arr[-1] = Y
                 datasets[time_stamp_h].append(feat_arr)
@@ -170,7 +198,7 @@ def learn_decision_tree(datasets):
     best_Y = None
     best_h = None
     results_str = ""
-    for d_k in datasets:
+    for d_k in sorted(datasets.keys()):
         if len(datasets[d_k]) == 0:
             print("WARNING: 0 data points for model %s" % d_k)
             continue
