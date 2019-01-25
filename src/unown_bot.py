@@ -389,7 +389,8 @@ class UnownBot():
     async def create_quest(self, quest_info):
         quest_cmd = '$quest '+quest_info["reward"]+' "'+quest_info["pokestop"]+'"'
         quest_report_channel_id = "525266532318707712"
-        await self.bot.send(discord.Object(id=quest_report_channel_id), quest_cmd)
+        channel = self.bot.get_channel(quest_report_channel_id)
+        await channel.send(quest_cmd)
         
     def run_discord_bot(self):
         @self.bot.event
