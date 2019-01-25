@@ -388,7 +388,7 @@ class UnownBot():
     
     async def create_quest(self, quest_info):
         quest_cmd = '$quest '+quest_info["reward"]+' "'+quest_info["pokestop"]+'"'
-        quest_report_channel_id = "525266532318707712"
+        quest_report_channel_id = 525266532318707712 #TODO: put in config
         channel = self.bot.get_channel(quest_report_channel_id)
         await channel.send(quest_cmd)
         
