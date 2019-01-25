@@ -28,7 +28,7 @@ def get_gym_name(fort_id, cnx):
 
 def get_pokestop_name(guid, cnx):
     cursor = cnx.cursor()
-    query = "select name from pokestops where external_id="+str(gui)+";"
+    query = "select name from pokestops where external_id="+str(guid)+";"
     cursor.execute(query)
     return cursor.fetchone()[0]
 
