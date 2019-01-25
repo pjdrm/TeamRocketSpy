@@ -176,7 +176,8 @@ class UnownBot():
             print("Quest scraping")
             quest_list = scrape_monocle_quests(self.tr_spy_config)
             print(quest_list)
-            await asyncio.sleep(60)
+            await self.create_quest(quest_list[0])
+            await asyncio.sleep(600000)
             
     async def check_pogo_events(self):
             while True:
@@ -384,6 +385,11 @@ class UnownBot():
             create_raid_command = self.get_create_raid_command(raid_info)
             self.report_raid(raid_channel_name, raid_info)
             await disc_channel.send(create_raid_command)
+    
+    async def create_quest(self, quest_info):
+        quest_cmd = '$quest '+quest_info["reward"]+' "'+quest_info["pokestop"]+'"'
+        quest_report_channel_id = "525266532318707712"
+        await self.bot.send(discord.Object(id=quest_report_channel_id), quest_cmd)
         
     def run_discord_bot(self):
         @self.bot.event
