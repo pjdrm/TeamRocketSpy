@@ -195,7 +195,8 @@ def scrape_monocle_quests(config):
 
 GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")
-POKE_INFO = "./config/pokemon.json"
+with open("./config/pokemon.json") as data_file:    
+        POKE_INFO = json.load(data_file)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
