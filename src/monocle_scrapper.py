@@ -26,6 +26,12 @@ def get_gym_name(fort_id, cnx):
     cursor.execute(query)
     return cursor.fetchone()[0]
 
+def get_pokestop_name(guid, cnx):
+    cursor = cnx.cursor()
+    query = "select name from pokestops where external_id="+str(gui)+";"
+    cursor.execute(query)
+    return cursor.fetchone()[0]
+
 def is_present_raid(raid_info):
     raid_end_time = None
     if raid_info["raid_starts_in"] is not None:
@@ -107,8 +113,6 @@ def scrape_monocle_db(config):
     if current_hour < 9:
         return [] #dont want to report and trigger notifications too early, might annoy users
     
-    with open(config["poke_info"]) as f:
-        poke_info = json.load(f)
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
@@ -129,7 +133,7 @@ def scrape_monocle_db(config):
         hatched = False
         boss = None
         if pokemon_id is not None:
-            boss = poke_info[str(pokemon_id)]["name"].replace("Alolan ", "")
+            boss = POKE_INFO[str(pokemon_id)]["name"].replace("Alolan ", "")
             hatched = True
             
         gym_name = get_gym_name(fort_id, cnx)
@@ -155,8 +159,43 @@ def scrape_monocle_db(config):
     cnx.close()
     return raid_list
 
+def scrape_monocle_quests(config):
+    db_config = { "user": config["user"],
+                  "password": config["password"],
+                  "host": config["host"],
+                  "database": config["database"],
+                  "raise_on_warnings": True,
+                  "autocommit": True}
+    print("Starting Monocle Scrape")
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor(buffered=True)
+    
+    query = "SELECT GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_reward_type, quest_item_amount FROM trs_quest"
+    cursor.execute(query)
+    
+    quest_list = []
+    
+    for (GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_reward_type, quest_item_id, quest_item_amount) in cursor:
+        quest_timestamp = datetime.datetime.fromtimestamp(quest_timestamp).strftime("%Y-%m-%d")
+        current_timestamp =dt.now().strftime("%Y-%m-%d")
+        if quest_timestamp != current_timestamp:
+            continue
+        
+        if quest_pokemon_id != 0:
+            reward = POKE_INFO[str(quest_pokemon_id)]["name"]
+        elif quest_stardust > 0:
+            reward = str(quest_stardust)+" Stardust"
+        else:
+            #It must be an item
+            reward = "Some item" #TODO: get the actual item
+        pokestop = get_pokestop_name(GUID, cnx)
+        quest_list.append({"pokestop": pokestop, "reward": reward})
+    return quest_list
+            
+
 GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")
+POKE_INFO = "./config/pokemon.json"
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:

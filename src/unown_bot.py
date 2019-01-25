@@ -14,7 +14,7 @@ from fuzzywuzzy import process
 import signal
 import sys
 from asyncio.tasks import sleep
-from monocle_scrapper import scrape_monocle_db
+from monocle_scrapper import scrape_monocle_db, scrape_monocle_quests
 from urllib.request import urlopen
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
@@ -169,6 +169,13 @@ class UnownBot():
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
+            await asyncio.sleep(60)
+            
+    async def check_pogo_quests(self):
+        while True:
+            print("Quest scraping")
+            quest_list = scrape_monocle_quests(self.tr_spy_config)
+            print(quest_list)
             await asyncio.sleep(60)
             
     async def check_pogo_events(self):
@@ -386,6 +393,7 @@ class UnownBot():
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
+            self.bot.loop.create_task(self.check_pogo_quests())
             
         @self.bot.event
         async def on_guild_channel_delete(channel):
