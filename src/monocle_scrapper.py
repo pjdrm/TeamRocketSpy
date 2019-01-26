@@ -186,9 +186,9 @@ def scrape_monocle_quests(config):
         if quest_pokemon_id != 0:
             reward = POKE_INFO[str(quest_pokemon_id)]["name"]
         elif quest_stardust > 0:
-            reward = str(quest_stardust)+" Stardust"
+            reward = '"'+str(quest_stardust)+' Stardust"'
         else:
-            reward = str(quest_item_amount)+" "+ITEMS_DICT[str(quest_item_id)]
+            reward = '"'+str(quest_item_amount)+" "+ITEMS_DICT[str(quest_item_id)]+'"'
         pokestop = get_pokestop_name(GUID, cnx)
         if pokestop == "unknown":
             print("MAD has not picked up Pokestop name")
