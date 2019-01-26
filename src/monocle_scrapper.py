@@ -188,7 +188,7 @@ def scrape_monocle_quests(config):
         elif quest_stardust > 0:
             reward = str(quest_stardust)+" Stardust"
         else:
-            reward = str(quest_item_amount)+" "+ITEMS_DICT[quest_item_id]
+            reward = str(quest_item_amount)+" "+ITEMS_DICT[str(quest_item_id)]
         pokestop = get_pokestop_name(GUID, cnx)
         if pokestop == "unknown":
             print("MAD has not picked up Pokestop name")
@@ -202,7 +202,7 @@ MOVE_DICT = load_move_protos("./config/proto_moves.json")
 with open("./config/pokemon.json") as data_file:    
     POKE_INFO = json.load(data_file)
         
-with open("./config/proto_moves.json") as data_file:    
+with open("./config/proto_items.json") as data_file:    
     ITEMS_DICT = json.load(data_file)
 
 if __name__ == "__main__":
