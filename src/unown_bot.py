@@ -54,6 +54,9 @@ class UnownBot():
         self.bolota_id = self.tr_spy_config["bolota_id"]
         self.unown_bot_id = self.tr_spy_config["unown_id"]
         self.pogo_events_fp = self.tr_spy_config["pogo_events"]
+        self.active_quests_channel_id = self.tr_spy_config["active_quests_channel_id"]
+        self.report_quests_channel_id = self.tr_spy_config["report_quests_channel_id"]
+        self.reward_filters = self.tr_spy_config["reward_filters"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
         self.issued_raids = {}
@@ -103,6 +106,14 @@ class UnownBot():
                 active_raids[raid_channel_name_short] = channel
                 print("Loaded raid %s" % raid_channel_name_short)
         return active_raids
+    
+    async def load_active_quests(self):
+        active_quests = {}
+        channel = self.bot.get_channel(self.active_quests_channel_id)
+        async for message in channel.history():
+            ps_name = "dummy pokestop" #TODO: get the actual pokestop name from message
+            active_quests[ps_name] = True
+        return active_quests
     
     def load_gyms(self, gyms_file, region_map):
         gyms_json = json.load(open(gyms_file))
@@ -155,6 +166,14 @@ class UnownBot():
                 filtered_raids.append(raid_info)
         return filtered_raids
     
+    def filter_quest(self, quest):
+        if self.reward_filters == "None":
+            return False
+        for reward_filter in self.reward_filters:
+            if reward_filter in quest["reward"]:
+                return False
+        return True
+    
     async def add_move_handler(self, channel):
         async for message in self.bot.logs_from(channel, limit=500):
                 if "Professora Bolota#6934"==str(message.author):
@@ -174,10 +193,15 @@ class UnownBot():
     async def check_pogo_quests(self):
         while True:
             print("Quest scraping")
+            active_quests = await self.load_active_quests()
             quest_list = scrape_monocle_quests(self.tr_spy_config)
             print(quest_list)
-            await self.create_quest(quest_list[0])
-            await asyncio.sleep(600000)
+            for quest in quest_list:
+                if not self.filter_quest(quest) and quest["pokestop"] not in active_quests:
+                    await self.create_quest(quest)
+                else:
+                    print("Discarding quest: %s" % quest)
+            await asyncio.sleep(1800) #30m
             
     async def check_pogo_events(self):
             while True:
@@ -325,7 +349,6 @@ class UnownBot():
         async for message in gym_channel.history():
             if self.is_raid_annouce(message):
                 return message
-        
         return None
         
     async def create_raid(self, raid_info):
@@ -387,20 +410,20 @@ class UnownBot():
             await disc_channel.send(create_raid_command)
     
     async def create_quest(self, quest_info):
+        print("Quest reporting: %s" % quest_info)
         quest_cmd = '$quest '+quest_info["reward"]+' "'+quest_info["pokestop"]+'"'
-        quest_report_channel_id = 525266532318707712 #TODO: put in config
-        channel = self.bot.get_channel(quest_report_channel_id)
+        channel = self.bot.get_channel(self.report_quests_channel_id)
         await channel.send(quest_cmd)
         
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
             print('UnownBot Ready')
+            self.bot.loop.create_task(self.check_pogo_quests())
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
-            self.bot.loop.create_task(self.check_pogo_quests())
             
         @self.bot.event
         async def on_guild_channel_delete(channel):

@@ -70,6 +70,7 @@ def is_present_raid(raid_info):
             return False
     else:
         return True
+    
 def populate_gym_name(fort_id, db_config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
