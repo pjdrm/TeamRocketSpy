@@ -199,8 +199,7 @@ class UnownBot():
             print(quest_list)
             for quest in quest_list:
                 if not self.filter_quest(quest) and quest["pokestop"] not in active_quests:
-                    print("Was going to create quest %s" % quest)
-                    #await self.create_quest(quest)
+                    await self.create_quest(quest)
                 else:
                     print("Discarding quest: %s" % quest)
             await asyncio.sleep(1800) #30m
