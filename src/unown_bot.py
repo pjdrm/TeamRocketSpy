@@ -111,8 +111,9 @@ class UnownBot():
         active_quests = {}
         channel = self.bot.get_channel(self.active_quests_channel_id)
         async for message in channel.history():
-            ps_name = "dummy pokestop" #TODO: get the actual pokestop name from message
+            ps_name = message.embeds[0]._author["name"]
             active_quests[ps_name] = True
+            print("Quest load: %s" % ps_name)
         return active_quests
     
     def load_gyms(self, gyms_file, region_map):
@@ -419,11 +420,11 @@ class UnownBot():
         @self.bot.event
         async def on_ready():
             print('UnownBot Ready')
-            self.bot.loop.create_task(self.check_pogo_quests())
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
+            self.bot.loop.create_task(self.check_pogo_quests())
             
         @self.bot.event
         async def on_guild_channel_delete(channel):
