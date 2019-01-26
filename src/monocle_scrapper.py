@@ -180,6 +180,7 @@ def scrape_monocle_quests(config):
         quest_timestamp = datetime.datetime.fromtimestamp(quest_timestamp).strftime("%Y-%m-%d")
         current_timestamp =dt.now().strftime("%Y-%m-%d")
         if quest_timestamp != current_timestamp:
+            print("Filtering old quest from %s" % quest_timestamp)
             continue
         
         if quest_pokemon_id != 0:
