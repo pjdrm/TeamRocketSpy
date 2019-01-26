@@ -30,7 +30,7 @@ def get_pokestop_name(guid, cnx):
     cursor = cnx.cursor()
     query = "select name from pokestops where external_id='"+str(guid)+"';"
     cursor.execute(query)
-    return cursor.fetchone()[0]
+    return cursor.fetchone()[0].strip()
 
 def is_present_raid(raid_info):
     raid_end_time = None
@@ -171,12 +171,12 @@ def scrape_monocle_quests(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_reward_type, quest_item_id, quest_item_amount FROM trs_quest"
+    query = "SELECT GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_item_id, quest_item_amount FROM trs_quest"
     cursor.execute(query)
     
     quest_list = []
     
-    for (GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_reward_type, quest_item_id, quest_item_amount) in cursor:
+    for (GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_item_id, quest_item_amount) in cursor:
         quest_timestamp = datetime.datetime.fromtimestamp(quest_timestamp).strftime("%Y-%m-%d")
         current_timestamp =dt.now().strftime("%Y-%m-%d")
         if quest_timestamp != current_timestamp:
@@ -188,8 +188,7 @@ def scrape_monocle_quests(config):
         elif quest_stardust > 0:
             reward = str(quest_stardust)+" Stardust"
         else:
-            #It must be an item
-            reward = "Some item" #TODO: get the actual item
+            reward = str(quest_item_amount)+" "+ITEMS_DICT[quest_item_id]
         pokestop = get_pokestop_name(GUID, cnx)
         if pokestop == "unknown":
             print("MAD has not picked up Pokestop name")
@@ -201,7 +200,10 @@ def scrape_monocle_quests(config):
 GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")
 with open("./config/pokemon.json") as data_file:    
-        POKE_INFO = json.load(data_file)
+    POKE_INFO = json.load(data_file)
+        
+with open("./config/proto_moves.json") as data_file:    
+    ITEMS_DICT = json.load(data_file)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
