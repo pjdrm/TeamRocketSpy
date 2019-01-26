@@ -191,6 +191,9 @@ def scrape_monocle_quests(config):
             #It must be an item
             reward = "Some item" #TODO: get the actual item
         pokestop = get_pokestop_name(GUID, cnx)
+        if pokestop == "unknown":
+            print("MAD has not picked up Pokestop name")
+            continue
         quest_list.append({"pokestop": pokestop, "reward": reward})
     return quest_list
             
