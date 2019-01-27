@@ -194,6 +194,7 @@ def scrape_monocle_quests(config):
             print("MAD has not picked up Pokestop name")
             continue
         quest_list.append({"pokestop": pokestop, "reward": reward})
+    quest_list = sorted(quest_list, key=lambda k: k["reward"]) 
     return quest_list
             
 
