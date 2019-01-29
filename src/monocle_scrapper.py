@@ -55,6 +55,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             str_split[-1] = "or "+str_split[-1]
             for mon_name in str_split:
                 quest_goal += mon_name+" "
+            quest_goal = quest_goal.strip()
         elif "with_pokemon_type" in quest_condition[0] and "pokemon_type" in quest_condition[0]["with_pokemon_type"]:
             type_mon_desc = ""
             for pokemon_type in quest_condition[0]["with_pokemon_type"]["pokemon_type"]:
@@ -71,36 +72,12 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal += "Pokemon"
         elif quest_condition[0]["type"] == 3:
             quest_goal += "weather boosted Pokemon"
-    elif quest_type == 16:
-        #Throw quests
-        if quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
-            quest_goal = "Make "+str(quest_target)+" nice throws"
-        elif quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
-            quest_goal = "Make "+str(quest_target)+" great throws"
-        elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
-            quest_goal = "Make "+str(quest_target)+" nice throws in row"
-        elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
-            quest_goal = "Make "+str(quest_target)+" great throws in a row"
-    elif quest_type == 8:
-        #Raid quests
-        if len(quest_condition) == 0:
-            quest_goal = "Battle in a raid"
-        elif quest_target == 1:
-            quest_goal = "Win a raid"
+    elif quest_type == 6:
+        #Hatch eggs quests
+        if quest_target == 1:
+            quest_goal = "Hatch an egg"
         else:
-            quest_goal = "Win "+str(quest_target)+" raids"
-    elif quest_type == 13:
-        #Berry quests
-        if quest_condition[0]["with_item"]["item"] == 705:
-            quest_goal = "Use "+str(quest_target)+" Pinap Berries while catching Pokemon"
-        elif quest_condition[0]["with_item"]["item"] == 701:
-            quest_goal = "Use "+str(quest_target)+" Razz Berries to help catch Pokemon"
-    elif quest_type == 24:
-        #Gift quests
-        quest_goal = "Send "+str(quest_target)+" gifts to friends"
-    elif quest_type == 14:
-        #Power up quest
-        quest_goal = "Power up a Pokemon "+str(quest_target)+" times"
+            quest_goal = "Hatch "+str(quest_target)+" eggs"
     elif quest_type == 7:
         #Gym battle quests
         if len(quest_condition) > 0 and quest_condition[0]["type"] == 10:
@@ -110,6 +87,25 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 quest_goal = "Battle in a gym "+str(quest_target)+" times"
             else:
                 quest_goal = "Battle in a gym"
+    elif quest_type == 8:
+        #Raid quests
+        if len(quest_condition) == 0:
+            quest_goal = "Battle in a raid"
+        elif quest_target == 1:
+            quest_goal = "Win a raid"
+        else:
+            quest_goal = "Win "+str(quest_target)+" raids"
+    elif quest_type == 10:
+        quest_goal = "Transfer "+str(quest_target)+" Pokemons"
+    elif quest_type == 13:
+        #Berry quests
+        if quest_condition[0]["with_item"]["item"] == 705:
+            quest_goal = "Use "+str(quest_target)+" Pinap Berries while catching Pokemon"
+        elif quest_condition[0]["with_item"]["item"] == 701:
+            quest_goal = "Use "+str(quest_target)+" Razz Berries to help catch Pokemon"
+    elif quest_type == 14:
+        #Power up quest
+        quest_goal = "Power up a Pokemon "+str(quest_target)+" times"
     elif quest_type == 15:
         #Evolve quests
         if len(quest_condition) > 0:
@@ -122,20 +118,25 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Evolve a Pokemon"
         else:
             quest_goal = "Evolve "+str(quest_target)+" Pokemons"
-    elif quest_type == 10:
-        quest_goal = "Transfer "+str(quest_target)+" Pokemons"
-    elif quest_type == 6:
-        #Hatch eggs quests
-        if quest_target == 1:
-            quest_goal = "Hatch an egg"
-        else:
-            quest_goal = "Hatch "+str(quest_target)+" eggs"
+    elif quest_type == 16:
+        #Throw quests
+        if quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
+            quest_goal = "Make "+str(quest_target)+" nice throws"
+        elif quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
+            quest_goal = "Make "+str(quest_target)+" great throws"
+        elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
+            quest_goal = "Make "+str(quest_target)+" nice throws in row"
+        elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
+            quest_goal = "Make "+str(quest_target)+" great throws in a row"
     elif quest_type == 23:
         #Trade quests
         if quest_target == 1:
             quest_goal = "Trade a Pokemon"
         else:
             quest_goal = "Trade "+str(quest_target)+" Pokemons"
+    elif quest_type == 24:
+        #Gift quests
+        quest_goal = "Send "+str(quest_target)+" gifts to friends"
     return quest_goal             
     
 def is_present_raid(raid_info):
