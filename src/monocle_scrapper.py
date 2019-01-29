@@ -50,6 +50,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 pokemon_name = POKE_INFO[str(pokemon_id)]["name"]
                 catch_mon_desc += pokemon_name+" "
                 prev_id = pokemon_id
+            catch_mon_desc = catch_mon_desc.strip()
             str_split = catch_mon_desc.split(" ")
             str_split[-1] = "or"+str_split[-1]
             for mon_name in str_split:
@@ -61,11 +62,12 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 type_desc = TYPE_DICT[pokemon_type]
                 type_mon_desc += type_desc+", "
             type_mon_desc = type_mon_desc[:-2]
-            str_split = type_mon_desc.split(" ")
-            str_split[-1] = "or "+str_split[-1]
-            for mon_type in str_split:
-                quest_goal += mon_type
-            quest_goal += " Pokemon"
+            if len(quest_condition[0]["with_pokemon_type"]) > 1:
+                str_split = type_mon_desc.split(" ")
+                str_split[-1] = "or "+str_split[-1]
+                for mon_type in str_split:
+                    quest_goal += mon_type+" "
+            quest_goal += "Pokemon"
         elif quest_condition[0]["type"] == 3:
             quest_goal += "weather boosted Pokemon"
     elif quest_type == 16:
@@ -94,7 +96,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Use "+str(quest_target)+" Razz Berries to help catch Pokemon"
     elif quest_type == 24:
         #Gift quests
-        quest_goal = "Send "+str(quest_target)+" to friends"
+        quest_goal = "Send "+str(quest_target)+" gifts to friends"
     elif quest_type == 14:
         #Power up quest
         quest_goal = "Power up a Pokemon "+str(quest_target)+" times"
