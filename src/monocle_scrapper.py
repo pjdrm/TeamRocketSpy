@@ -33,6 +33,7 @@ def get_pokestop_name(guid, cnx):
     return cursor.fetchone()[0].strip()
 
 def get_quest_goal(quest_type, quest_target, quest_condition):
+    quest_condition = eval(quest_condition)
     quest_goal = None
     if quest_type == 4:
         #Catch Pokemon quests
@@ -79,7 +80,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Make "+str(quest_target)+" great throws in a row"
     elif quest_type == 8:
         #Raid quests
-        if len(quest_condition[0]) == 0:
+        if len(quest_condition) == 0:
             quest_goal = "Battle in a raid"
         elif quest_target == 1:
             quest_goal = "Win a raid"
@@ -99,7 +100,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
         quest_goal = "Power up a Pokemon "+str(quest_target)+" times"
     elif quest_type == 7:
         #Gym battle quests
-        if len(quest_condition[0]) > 0 and quest_condition[0]["type"] == 10:
+        if len(quest_condition) > 0 and quest_condition[0]["type"] == 10:
             quest_goal = "Use a supereffective charged attack in "+str(quest_target)+" gym battles"
         else:
             if quest_target > 1:
@@ -108,7 +109,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 quest_goal = "Battle in a gym"
     elif quest_type == 15:
         #Evolve quests
-        if len(quest_condition[0]) > 0:
+        if len(quest_condition) > 0:
             if quest_condition[0]["type"] == 11:
                 quest_goal = "Use an item to evolve a Pokemon"
             elif "with_pokemon_category" in quest_condition[0]:
