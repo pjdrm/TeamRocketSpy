@@ -51,7 +51,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 catch_mon_desc += pokemon_name+" "
                 prev_id = pokemon_id
             str_split = catch_mon_desc.split(" ")
-            str_split[-1] = "or "+str_split[-1]
+            str_split[-1] = "or"+str_split[-1]
             for mon_name in str_split:
                 quest_goal += mon_name+" "
             quest_goal += "Pokemon"
@@ -62,12 +62,12 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
                 type_mon_desc += type_desc+", "
             type_mon_desc = type_mon_desc[:-2]
             str_split = type_mon_desc.split(" ")
-            str_split[-1] = "or "+str_split[-1][1:]
+            str_split[-1] = "or "+str_split[-1]
             for mon_type in str_split:
                 quest_goal += mon_type
-            quest_goal += "Pokemon"
+            quest_goal += " Pokemon"
         elif quest_condition[0]["type"] == 3:
-            quest_goal = "weather boosted Pokemon"
+            quest_goal += "weather boosted Pokemon"
     elif quest_type == 16:
         #Throw quests
         if quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
