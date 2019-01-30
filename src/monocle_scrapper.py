@@ -99,7 +99,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
         quest_goal = "Transfer "+str(quest_target)+" Pokemons"
     elif quest_type == 13:
         #Berry quests
-        if "with_item" not in quest_condition[0]:
+        if len(quest_condition) == 0:
             quest_goal = "Use "+str(quest_target)+" to help catch Pokemon"
         elif quest_condition[0]["with_item"]["item"] == 705:
             quest_goal = "Use "+str(quest_target)+" Pinap Berries while catching Pokemon"
