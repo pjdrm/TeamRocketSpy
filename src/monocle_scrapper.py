@@ -132,6 +132,9 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Make "+str(quest_target)+" great throws in a row"
         elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 12:
             quest_goal = "Make "+str(quest_target)+" excellent throws in a row"
+    elif quest_type == 17:
+        #Buddy quests
+        quest_goal = "Earn "+str(quest_target)+" candies walking with your buddy"
     elif quest_type == 23:
         #Trade quests
         if quest_target == 1:
