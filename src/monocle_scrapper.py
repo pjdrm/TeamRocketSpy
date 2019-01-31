@@ -100,7 +100,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
     elif quest_type == 13:
         #Berry quests
         if len(quest_condition) == 0:
-            quest_goal = "Use "+str(quest_target)+" to help catch Pokemon"
+            quest_goal = "Use "+str(quest_target)+" berries to help catch Pokemon"
         elif quest_condition[0]["with_item"]["item"] == 705:
             quest_goal = "Use "+str(quest_target)+" Pinap Berries while catching Pokemon"
         elif quest_condition[0]["with_item"]["item"] == 701:
