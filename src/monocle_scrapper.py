@@ -100,7 +100,7 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
     elif quest_type == 13:
         #Berry quests
         if len(quest_condition) == 0:
-            quest_goal = "Use "+str(quest_target)+" to help catch Pokemon"
+            quest_goal = "Use "+str(quest_target)+" berries to help catch Pokemon"
         elif quest_condition[0]["with_item"]["item"] == 705:
             quest_goal = "Use "+str(quest_target)+" Pinap Berries while catching Pokemon"
         elif quest_condition[0]["with_item"]["item"] == 701:
@@ -130,6 +130,8 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Make "+str(quest_target)+" nice throws in row"
         elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
             quest_goal = "Make "+str(quest_target)+" great throws in a row"
+        elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 12:
+            quest_goal = "Make "+str(quest_target)+" excellent throws in a row"
     elif quest_type == 23:
         #Trade quests
         if quest_target == 1:
