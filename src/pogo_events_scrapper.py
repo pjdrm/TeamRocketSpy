@@ -56,7 +56,7 @@ class PogoEventsScrapper():
             date = date_split[0]+" "+date_split[1]+" "+date_split[4]
             
             if "Europe" in split_str[0]:
-                event_name = (split_str[0].split(" in Europe")[0].replace("starts", "Starts")+":").strip()
+                event_name = split_str[0].strip().replace("Europe ", "").replace("starts", "Starts")
             else:
                 event_name = split_str[0].split("\n")[0]
             if ("Start" in event_name):
@@ -65,6 +65,7 @@ class PogoEventsScrapper():
             else:
                 desc = event_name.replace(" Ends", "").replace(" End", "")
                 date = "Ends: "+date
+            desc = desc.replace(" in", "")
             pogo_event_list.append({"desc": desc, "date": date})
         return pogo_event_list
 
