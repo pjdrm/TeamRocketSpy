@@ -72,6 +72,8 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal += "Pokemon"
         elif quest_condition[0]["type"] == 3:
             quest_goal += "weather boosted Pokemon"
+    elif quest_type == 5:
+        quest_goal = "Spin "+str(quest_target)+" pokestops or gyms"
     elif quest_type == 6:
         #Hatch eggs quests
         if quest_target == 1:
