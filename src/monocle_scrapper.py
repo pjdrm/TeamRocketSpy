@@ -128,6 +128,8 @@ def get_quest_goal(quest_type, quest_target, quest_condition):
             quest_goal = "Make "+str(quest_target)+" nice throws"
         elif quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
             quest_goal = "Make "+str(quest_target)+" great throws"
+        elif quest_condition[0]["type"] == 8 and quest_condition[0]["with_throw_type"]["throw_type"] == 12:
+            quest_goal = "Make "+str(quest_target)+" excellent throws"
         elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 10:
             quest_goal = "Make "+str(quest_target)+" nice throws in row"
         elif quest_condition[0]["type"] == 14 and quest_condition[0]["with_throw_type"]["throw_type"] == 11:
