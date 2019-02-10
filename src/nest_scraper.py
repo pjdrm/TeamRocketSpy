@@ -6,6 +6,9 @@ Created on Feb 9, 2019
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import mysql.connector
+from collections import Counter
+import operator
+import json
 
 def load_geofences(file_path):
     nests = []
@@ -40,6 +43,16 @@ def find_geofence(geofences, point):
         if inside_geofence(geofence, point):
             return geofence
     return None
+
+def find_nesting_mon(spawns, black_mon_list):
+    spawn_counts = Counter(spawns)
+    ordered_spawn_counts = sorted(spawn_counts.items(), key=lambda kv: kv[1])
+    for mon_id in ordered_spawn_counts:
+        mon_name = POKE_INFO[str(mon_id)]["name"]
+        if mon_name not in black_mon_list:
+            return mon_name
+    print("WARNING: could not find nest pokemon")
+    return None
         
 def assign_spawns(geofences, spawns):
     nests = {}
@@ -70,6 +83,9 @@ def get_spawns(config):
     for (pokemon_id, lat, lon) in cursor:
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
+
+with open("./config/pokemon.json") as data_file:    
+    POKE_INFO = json.load(data_file)
         
         
 '''
