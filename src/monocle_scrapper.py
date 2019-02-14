@@ -171,7 +171,7 @@ def scrape_monocle_quests(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_item_id, quest_item_amount, quest_type, quest_target, quest_condition FROM trs_quest"
+    query = "SELECT GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_item_id, quest_item_amount, quest_task FROM trs_quest"
     cursor.execute(query)
     
     quest_list = []
