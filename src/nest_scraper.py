@@ -75,7 +75,7 @@ def get_spawns(config):
     cursor.execute(query)
     
     spawns = []
-    current_timestamp = "2019-02-09"#dt.now().strftime("%Y-%m-%d")
+    current_timestamp = dt.now().strftime("%Y-%m-%d")
     for (pokemon_id, lat, lon, updated) in cursor:
         timestamp_timestamp = datetime.datetime.fromtimestamp(updated).strftime("%Y-%m-%d")
         if timestamp_timestamp != current_timestamp:
