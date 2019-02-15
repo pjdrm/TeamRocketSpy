@@ -37,15 +37,19 @@ def find_geofence(geofences, point):
             return name
     return None
 
-def find_nesting_mon(spawns, black_mon_list):
+def find_nesting_mon(spawns, nest_name, black_mon_list):
     spawn_counts = Counter(spawns)
-    ordered_spawn_counts = spawn_counts.most_common(30)
+    ordered_spawn_counts = spawn_counts.most_common(5)
+    nest_mon = None
+    print("Finding nesting species for %s"%name)
     for mon_id, mon_count in ordered_spawn_counts:
         mon_name = POKE_INFO[str(mon_id)]["name"]
+        print("species: %s count: %d"%(mon_name, mon_count))
         if mon_name not in black_mon_list:
-            return mon_name
-    print("WARNING: could not find nest pokemon")
-    return None
+            nest_mon = mon_name
+    if nest_mon is None:
+        print("WARNING: could not find nest pokemon")
+    return nest_mon
         
 def assign_spawns(geofences, spawns):
     nests = {}
@@ -89,7 +93,7 @@ def find_nests(tr_spy_config):
     spawns = get_spawns(tr_spy_config)
     nests = assign_spawns(geofences, spawns)
     for name in nests:
-        nestig_mon = find_nesting_mon(nests[name], mon_black_list)
+        nestig_mon = find_nesting_mon(nests[name], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
     
