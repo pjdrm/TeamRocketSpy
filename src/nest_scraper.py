@@ -39,7 +39,7 @@ def find_geofence(geofences, point):
 
 def find_nesting_mon(spawns, nest_name, black_mon_list):
     spawn_counts = Counter(spawns)
-    ordered_spawn_counts = spawn_counts.most_common(5)
+    ordered_spawn_counts = spawn_counts.most_common(5).reverse()
     nest_mon = None
     print("Finding nesting species for %s" % nest_name)
     for mon_id, mon_count in ordered_spawn_counts:
