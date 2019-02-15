@@ -102,6 +102,6 @@ with open("./config/pokemon.json") as data_file:
     POKE_INFO = json.load(data_file)
         
         
-with open("/home/pjdrm/eclipse-workspace/TeamRocketSpy/config/tr_spy_config.json") as data_file:    
+with open("./config/tr_spy_config.json") as data_file:    
     tr_spy_config = json.load(data_file)
 find_nests(tr_spy_config)
