@@ -15,13 +15,11 @@ from datetime import datetime as dt
 def load_geofences(file_path):
     with open(file_path) as f:
         nests = eval(f.read())
-        mon_black_list =nests["mon_black_list"]
-        nests.pop("mon_black_list")
-        for name in nests:
-            polygon_pts = nests[name]["polygon"]
+        for nest in nests:
+            polygon_pts = nest["path"]
             polygon = Polygon(polygon_pts)
-            nests[name]["polygon"] = polygon
-    return nests, mon_black_list
+            nest["polygon"] = polygon
+    return nests
     
 def inside_geofence(polygon, point):
     lat = point[0]
@@ -31,10 +29,10 @@ def inside_geofence(polygon, point):
     return is_inside
     
 def find_geofence(geofences, point):
-    for name in geofences:
-        polygon = geofences[name]["polygon"]
+    for geofence in geofences:
+        polygon = geofence["polygon"]
         if inside_geofence(polygon, point):
-            return name
+            return geofence["name"]
     return None
 
 def find_nesting_mon(spawns, nest_name, black_mon_list):
@@ -90,7 +88,8 @@ def get_spawns(config):
 
 def find_nests(tr_spy_config):
     nest_config_path = tr_spy_config["nest_config_path"]
-    geofences, mon_black_list = load_geofences(nest_config_path)
+    mon_black_list = tr_spy_config["nest_mon_black_list"]
+    geofences = load_geofences(nest_config_path)
     spawns = get_spawns(tr_spy_config)
     nests = assign_spawns(geofences, spawns)
     for name in nests:

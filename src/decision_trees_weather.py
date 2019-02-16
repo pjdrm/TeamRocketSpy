@@ -13,11 +13,11 @@ from sklearn.externals.six import StringIO
 import pydotplus
 
 FEAT_NAMES = ['forecast_desc',
-              'rain_prob',
-              'wind_speed',
-              'cloud_cover',
-              'visibility',
-              'snow_prob']
+              'rain_prob']
+              #'wind_speed',
+              #'cloud_cover']
+              #'visibility',
+              #'snow_prob']
 
 FEAT_MAP = {'Cloudy': 0,
             'Mostly Cloudy': 1,
@@ -31,11 +31,11 @@ FEAT_MAP = {'Cloudy': 0,
             'Clear': 9,
             'Fog': 10}
 
-VAL_BREAK_PTS = {'wind_speed': 20,
+VAL_BREAK_PTS = {'wind_speed': 21,
                  'snow_prob': 80,
                  'visibility': 80,
-                 'rain_prob': 60,
-                 'cloud_cover': 70}
+                 'rain_prob': 50,
+                 'cloud_cover': 75}
 
 NAME_MAP = {1: 'Sunny',
            2: 'Rain',
@@ -59,6 +59,7 @@ def get_features(feat_names,
     for i, f_name in enumerate(feat_names):
         i = len(feat_map)+i-1
         val = forecast_log[f_name]
+        '''
         if f_name == "forecast_desc":
             i = feat_map[val]
             feat_arr[i] = 1
@@ -103,7 +104,6 @@ def get_features(feat_names,
                     val = 1
                 else:
                     val = 0
-        '''
         feat_arr[i] = int(val)
     return feat_arr
 
@@ -180,6 +180,8 @@ def load_ingame_weather(ingame_log, s2id2lk):
         lin_split = lin.split(" ")
         s2cell_id = lin_split[3]
         weather_condition = lin_split[5]
+        if weather_condition == '0':
+            continue
         if weather_condition == '11':
             weather_condition = '1' #merging Clear in Sunny weather since they are the same
         elif weather_condition == '13':
@@ -256,10 +258,25 @@ def learn_decision_tree(datasets):
     graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
     graph.write_pdf("dt_test.pdf")
     
+def test_val_break_points(acc_log, ingame_weather):
+    cloud_bp = [75]
+    rain_bp = [20, 30, 40, 50, 60, 70, 80, 90]
+    wind_bp = [21]
+    for cloud_cover_val in cloud_bp:
+        for rain_val in rain_bp:
+            for wind_val in wind_bp:
+                print("Testing cloud cover: %d rain probability: %d  wind speed: %d"%(cloud_cover_val, rain_val, wind_val))
+                VAL_BREAK_PTS['rain_prob'] = rain_val
+                VAL_BREAK_PTS['wind_speed'] = wind_val
+                VAL_BREAK_PTS['cloud_cover'] = cloud_cover_val
+                load_features(acc_log, ingame_weather)
+                print("------------------------")
+    
     
 ingame_log = "/home/pjdrm/Desktop/PgL/weather_forecasts/ingame/forecast_log.txt"
 ingame_weather = load_ingame_weather(ingame_log, S2ID_2_LK)
 
 acc_log = "/home/pjdrm/Desktop/PgL/weather_forecasts/acu/forecast_log.txt"
 load_features(acc_log, ingame_weather)
+#test_val_break_points(acc_log, ingame_weather)
         
