@@ -89,11 +89,12 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest(nest_channel, nest_name, nesting_mon):
+async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, api_key):
     print("Reporting nest %s" % nest_name)
     nest_title = nest_name+" is a "+nesting_mon+" nest"
-    nest_embed=discord.Embed(title=nest_title)
-    nest_img_path = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
+    title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
+    nest_embed=discord.Embed(title=nest_title, url=title_url)
+    nest_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=600x300&markers=color:red%7Clabel:C%7C"+str(nest_center[0])+","+str(nest_center[1])+"&key="+api_key
     mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon+".png"
     nest_embed.set_thumbnail(url=mon_img)
     nest_embed.set_image(url=nest_img_path)
@@ -112,9 +113,10 @@ def find_nests(tr_spy_config):
             print("%s is a %s nest"%(name, nestig_mon))
             FOUND_NESTS.append([name, nestig_mon])
     '''
-    global FOUND_NESTS, NEST_CHANNEL_ID
-    FOUND_NESTS = [["Alameda", "numel"]]
+    global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY
+    FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359]]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
+    API_KEY = tr_spy_config["maps_api_key"]
     bot.run(tr_spy_config["bot_token"])
 
 bot = commands.Bot(command_prefix="$")
@@ -124,8 +126,8 @@ async def on_ready():
     print("Going to report nests to Poketrainers")
     print(NEST_CHANNEL_ID)
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
-    for nest_name, nestig_mon in FOUND_NESTS:
-        await report_nest(nest_channel, nest_name, nestig_mon)
+    for nest_name, nestig_mon, nest_center in FOUND_NESTS:
+        await report_nest(nest_channel, nest_name, nestig_mon, API_KEY)
         await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
@@ -137,4 +139,5 @@ with open("./config/tr_spy_config.json") as data_file:
    
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
+API_KEY = None
 find_nests(tr_spy_config)
