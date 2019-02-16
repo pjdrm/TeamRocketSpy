@@ -90,6 +90,7 @@ def get_spawns(config):
     return spawns
 
 async def report_nest(nest_channel, nest_name, nestig_mon):
+    print("reporting nest")
     nest_title = nest_name+" is a "+nestig_mon+" nest"
     nest_embed=discord.Embed(title=nest_title)
     nest_img_path = tr_spy_config["nest_img_dir"]+nest_name+".png"
@@ -97,6 +98,7 @@ async def report_nest(nest_channel, nest_name, nestig_mon):
     await nest_channel.send(embed=nest_embed)
     
 def find_nests(tr_spy_config):
+    '''
     nest_config_path = tr_spy_config["nest_config_path"]
     mon_black_list = tr_spy_config["nest_mon_black_list"]
     geofences = load_geofences(nest_config_path)
@@ -107,18 +109,24 @@ def find_nests(tr_spy_config):
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
             FOUND_NESTS.append([name, nestig_mon])
-    
+    '''
+    print("SETTING GLOBALS")
+    global FOUND_NESTS, NEST_CHANNEL_ID
+    FOUND_NESTS = [["numel", "Alameda"]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
-    bot = commands.Bot(command_prefix="?")
+    print("GOING TO RUN BOT")
     bot.run(tr_spy_config["bot_token"])
+
+bot = commands.Bot(command_prefix="$")
     
-    @bot.event
-    async def on_ready():
-        print("Going to report nests to Poketrainers")
-        nest_channel = bot.get_channel(NEST_CHANNEL_ID)
-        for nest_name, nestig_mon in FOUND_NESTS:
-            await report_nest(nest_channel, nest_name, nestig_mon)
-        bot.close()
+@bot.event
+async def on_ready():
+    print("Going to report nests to Poketrainers")
+    print(NEST_CHANNEL_ID)
+    nest_channel = bot.get_channel(NEST_CHANNEL_ID)
+    for nest_name, nestig_mon in FOUND_NESTS:
+        await report_nest(nest_channel, nest_name, nestig_mon)
+        await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
     POKE_INFO = json.load(data_file)
@@ -126,7 +134,7 @@ with open("./config/pokemon.json") as data_file:
         
 with open("./config/tr_spy_config.json") as data_file:    
     tr_spy_config = json.load(data_file)
-    
+   
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
 find_nests(tr_spy_config)
