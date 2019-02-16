@@ -127,7 +127,7 @@ async def on_ready():
     print(NEST_CHANNEL_ID)
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
     for nest_name, nestig_mon, nest_center in FOUND_NESTS:
-        await report_nest(nest_channel, nest_name, nestig_mon, API_KEY)
+        await report_nest(nest_channel, nest_name, nestig_mon, nest_center, API_KEY)
         await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
