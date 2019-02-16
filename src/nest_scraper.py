@@ -93,14 +93,14 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     print("Reporting nest %s" % nest_name)
     nest_title = "Directions to "+nest_name
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
-    author_name = "Nest "+nest_name
+    author_name = "<:pogo_nest:546449760022953984> Nest "+nest_name
     nest_embed=discord.Embed(title=nest_title, url=title_url, description=address)
     nest_embed.set_author(name=author_name)
     nest_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(nest_center[0])+","+str(nest_center[1])+"&key="+api_key
     mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon+".png"
     nest_embed.set_thumbnail(url=mon_img)
     nest_embed.set_image(url=nest_img_path)
-    nest_embed.add_field(name="Nesting Pokemon", value=nesting_mon, inline=True)
+    nest_embed.add_field(name="Nesting Pokemon", value=nesting_mon.title(), inline=True)
     await nest_channel.send(embed=nest_embed)
     
 def find_nests(tr_spy_config):
