@@ -89,11 +89,13 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest(nest_channel, nest_name, nestig_mon):
+async def report_nest(nest_channel, nest_name, nesting_mon):
     print("Reporting nest %s" % nest_name)
-    nest_title = nest_name+" is a "+nestig_mon+" nest"
+    nest_title = nest_name+" is a "+nesting_mon+" nest"
     nest_embed=discord.Embed(title=nest_title)
     nest_img_path = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
+    mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon+".png"
+    nest_embed.set_thumbnail(mon_img)
     nest_embed.set_image(url=nest_img_path)
     await nest_channel.send(embed=nest_embed)
     
