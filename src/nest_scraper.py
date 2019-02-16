@@ -93,7 +93,7 @@ async def report_nest(nest_channel, nest_name, nestig_mon):
     print("Reporting nest %s" % nest_name)
     nest_title = nest_name+" is a "+nestig_mon+" nest"
     nest_embed=discord.Embed(title=nest_title)
-    nest_img_path = tr_spy_config["nest_img_dir"]+nest_name+".png"
+    nest_img_path = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
     nest_embed.set_image(url=nest_img_path)
     await nest_channel.send(embed=nest_embed)
     
