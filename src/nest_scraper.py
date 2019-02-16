@@ -89,7 +89,7 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest(nest_channel, nest_name, nesting_mon, api_key):
+async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, api_key):
     print("Reporting nest %s" % nest_name)
     nest_title = nest_name+" is a "+nesting_mon+" nest"
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
@@ -114,7 +114,7 @@ def find_nests(tr_spy_config):
             FOUND_NESTS.append([name, nestig_mon])
     '''
     global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY
-    FOUND_NESTS = [["Alameda", "numel"]]
+    FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359]]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     API_KEY = tr_spy_config["maps_api_key"]
     bot.run(tr_spy_config["bot_token"])
@@ -126,8 +126,8 @@ async def on_ready():
     print("Going to report nests to Poketrainers")
     print(NEST_CHANNEL_ID)
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
-    for nest_name, nestig_mon in FOUND_NESTS:
-        await report_nest(nest_channel, nest_name, nestig_mon, API_KEY)
+    for nest_name, nestig_mon, nest_center in FOUND_NESTS:
+        await report_nest(nest_channel, nest_name, nestig_mon, nest_center, API_KEY)
         await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
