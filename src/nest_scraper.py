@@ -11,6 +11,8 @@ import operator
 import json
 import datetime
 from datetime import datetime as dt
+import discord
+from discord.ext import commands
 
 def load_geofences(file_path):
     with open(file_path) as f:
@@ -87,6 +89,13 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
+async def report_nest(nest_channel, nest_name, nestig_mon):
+    nest_title = nest_name+" is a "+nestig_mon+" nest"
+    nest_embed=discord.Embed(title=nest_title)
+    nest_img_path = tr_spy_config["nest_img_dir"]+nest_name+".png"
+    nest_embed.set_image(url=nest_img_path)
+    await nest_channel.send(embed=nest_embed)
+    
 def find_nests(tr_spy_config):
     nest_config_path = tr_spy_config["nest_config_path"]
     mon_black_list = tr_spy_config["nest_mon_black_list"]
@@ -97,7 +106,19 @@ def find_nests(tr_spy_config):
         nestig_mon = find_nesting_mon(nests[name], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
+            FOUND_NESTS.append([name, nestig_mon])
     
+    NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
+    bot = commands.Bot(command_prefix="?")
+    bot.run(tr_spy_config["bot_token"])
+    
+    @bot.event
+    async def on_ready():
+        print("Going to report nests to Poketrainers")
+        nest_channel = bot.get_channel(NEST_CHANNEL_ID)
+        for nest_name, nestig_mon in FOUND_NESTS:
+            await report_nest(nest_channel, nest_name, nestig_mon)
+        bot.close()
 
 with open("./config/pokemon.json") as data_file:    
     POKE_INFO = json.load(data_file)
@@ -105,4 +126,7 @@ with open("./config/pokemon.json") as data_file:
         
 with open("./config/tr_spy_config.json") as data_file:    
     tr_spy_config = json.load(data_file)
+    
+FOUND_NESTS = []
+NEST_CHANNEL_ID = None
 find_nests(tr_spy_config)
