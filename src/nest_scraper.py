@@ -59,7 +59,8 @@ def assign_spawns(geofences, spawns):
         if gf_name not in nests:
             nests[gf_name] = []
         nests[gf_name].append(spawn["pokemon_id"])
-    for name in geofences:
+    for geofence in geofences:
+        name = geofence["name"]
         if name not in nests:
             print("WARNING: no spawn points for nest %s" % name)
     return nests
