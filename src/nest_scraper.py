@@ -113,7 +113,7 @@ def find_nests(tr_spy_config):
             FOUND_NESTS.append([name, nestig_mon])
     '''
     global FOUND_NESTS, NEST_CHANNEL_ID
-    FOUND_NESTS = [["numel", "Alameda"]]
+    FOUND_NESTS = [["Alameda", "numel"]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     bot.run(tr_spy_config["bot_token"])
 
