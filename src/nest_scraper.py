@@ -83,7 +83,7 @@ def assign_spawns(geofences, spawns):
             nests[gf_name]["spawns"] = []
             nests[gf_name]["address"] = geofence["address"]
             nests[gf_name]["center"] = geofence["center"]
-        nests[gf_name].append(spawn["pokemon_id"])
+        nests[gf_name]["spawns"].append(spawn["pokemon_id"])
     for geofence in geofences:
         name = geofence["name"]
         if name not in nests:
