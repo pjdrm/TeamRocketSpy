@@ -137,6 +137,7 @@ def find_nests(tr_spy_config):
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
             FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"]])
+        print("-----------------")
     
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
