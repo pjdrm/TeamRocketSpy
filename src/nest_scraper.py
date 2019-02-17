@@ -13,14 +13,33 @@ import datetime
 from datetime import datetime as dt
 import discord
 from discord.ext import commands
+import googlemaps
 
-def load_geofences(file_path):
-    with open(file_path) as f:
+def load_geofences(tr_cfg):
+    nest_config_path = tr_spy_config["nest_config_path"]
+    with open(nest_config_path) as f:
         nests = eval(f.read())
+        
+    if "address" not in nests[0]:
+        gmaps = googlemaps.Client(key=tr_cfg["maps_api_key"])
         for nest in nests:
             polygon_pts = nest["path"]
             polygon = Polygon(polygon_pts)
-            nest["polygon"] = polygon
+            coords = eval(polygon.representative_point().wkt[6:].replace(" ", ", "))
+            address = gmaps.reverse_geocode(coords)[0]["formatted_address"]
+            str_split = address.split(", ")
+            if len(str_split) == 4:
+                address = ", ".join(str_split[1:])
+            nest["address"] = address
+            nest["center"] = coords
+        with open(nest_config_path, "w+") as f:
+            f.write(json.dumps(nests, indent=1))
+
+    for nest in nests:
+        polygon_pts = nest["path"]
+        polygon = Polygon(polygon_pts)
+        nest["polygon"] = polygon
+        nest["center"] = polygon.representative_point().wkt
     return nests
     
 def inside_geofence(polygon, point):
@@ -59,7 +78,9 @@ def assign_spawns(geofences, spawns):
         if gf_name is None:
             continue
         if gf_name not in nests:
-            nests[gf_name] = []
+            nests[gf_name]["spawns"] = []
+            nests[gf_name]["address"] = geofences["address"]
+            nests[gf_name]["center"] = geofences["center"]
         nests[gf_name].append(spawn["pokemon_id"])
     for geofence in geofences:
         name = geofence["name"]
@@ -104,21 +125,19 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     await nest_channel.send(embed=nest_embed)
     
 def find_nests(tr_spy_config):
-    '''
-    nest_config_path = tr_spy_config["nest_config_path"]
+    global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY
     mon_black_list = tr_spy_config["nest_mon_black_list"]
-    geofences = load_geofences(nest_config_path)
+    geofences = load_geofences(tr_spy_config)
     spawns = get_spawns(tr_spy_config)
     nests = assign_spawns(geofences, spawns)
     for name in nests:
-        nestig_mon = find_nesting_mon(nests[name], name, mon_black_list)
+        nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
-            FOUND_NESTS.append([name, nestig_mon])
-    '''
-    global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY
-    FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"]]
-    NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
+            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"]])
+    
+    #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"]]
+    #NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     API_KEY = tr_spy_config["maps_api_key"]
     bot.run(tr_spy_config["bot_token"])
 
