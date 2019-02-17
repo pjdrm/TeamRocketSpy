@@ -78,6 +78,7 @@ def assign_spawns(geofences, spawns):
         if gf_name is None:
             continue
         if gf_name not in nests:
+            nests[gf_name] = {}
             nests[gf_name]["spawns"] = []
             nests[gf_name]["address"] = geofences["address"]
             nests[gf_name]["center"] = geofences["center"]
