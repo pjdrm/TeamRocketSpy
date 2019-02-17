@@ -53,7 +53,7 @@ def find_geofence(geofences, point):
     for geofence in geofences:
         polygon = geofence["polygon"]
         if inside_geofence(polygon, point):
-            return geofence["name"]
+            return geofence
     return None
 
 def find_nesting_mon(spawns, nest_name, black_mon_list):
@@ -74,14 +74,15 @@ def find_nesting_mon(spawns, nest_name, black_mon_list):
 def assign_spawns(geofences, spawns):
     nests = {}
     for spawn in spawns:
-        gf_name = find_geofence(geofences, spawn["point"])
+        geofence = find_geofence(geofences, spawn["point"])
+        gf_name = geofence["name"]
         if gf_name is None:
             continue
         if gf_name not in nests:
             nests[gf_name] = {}
             nests[gf_name]["spawns"] = []
-            nests[gf_name]["address"] = geofences["address"]
-            nests[gf_name]["center"] = geofences["center"]
+            nests[gf_name]["address"] = geofence["address"]
+            nests[gf_name]["center"] = geofence["center"]
         nests[gf_name].append(spawn["pokemon_id"])
     for geofence in geofences:
         name = geofence["name"]
