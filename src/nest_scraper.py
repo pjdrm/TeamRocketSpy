@@ -40,6 +40,20 @@ def load_geofences(tr_cfg):
         polygon = Polygon(polygon_pts)
         nest["polygon"] = polygon
     return nests
+
+def create_mad_geofence(tr_cfg):
+    nest_config_path = tr_spy_config["nest_config_path"]
+    with open(nest_config_path) as f:
+        nests = eval(f.read())
+    mad_geofence = ""
+    for nest in nests:
+        mad_geofence += '["'+nest["name"]+'"]\n'
+        polygon_pts = nest["path"]
+        for pt in polygon_pts:
+            mad_geofence += str(pt[0])+", "+str(pt[1])+"\n"
+        mad_geofence += "\n"
+    with open("mad_geofence.txt", "w+") as f:
+            f.write(mad_geofence)
     
 def inside_geofence(polygon, point):
     lat = point[0]
@@ -165,3 +179,4 @@ FOUND_NESTS = []
 NEST_CHANNEL_ID = None
 API_KEY = None
 find_nests(tr_spy_config)
+#create_mad_geofence(tr_spy_config)
