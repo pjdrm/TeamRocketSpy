@@ -75,9 +75,9 @@ def assign_spawns(geofences, spawns):
     nests = {}
     for spawn in spawns:
         geofence = find_geofence(geofences, spawn["point"])
-        gf_name = geofence["name"]
-        if gf_name is None:
+        if geofence is None:
             continue
+        gf_name = geofence["name"]
         if gf_name not in nests:
             nests[gf_name] = {}
             nests[gf_name]["spawns"] = []
