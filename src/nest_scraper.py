@@ -39,7 +39,6 @@ def load_geofences(tr_cfg):
         polygon_pts = nest["path"]
         polygon = Polygon(polygon_pts)
         nest["polygon"] = polygon
-        nest["center"] = polygon.representative_point().wkt
     return nests
     
 def inside_geofence(polygon, point):
@@ -120,7 +119,7 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     nest_embed=discord.Embed(title=nest_title, url=title_url, description=address)
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
     nest_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(nest_center[0])+","+str(nest_center[1])+"&key="+api_key
-    mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon+".png"
+    mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon.lower()+".png"
     nest_embed.set_thumbnail(url=mon_img)
     nest_embed.set_image(url=nest_img_path)
     nest_embed.add_field(name="Nesting Pokemon", value=nesting_mon.title(), inline=True)
