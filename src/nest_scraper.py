@@ -15,6 +15,7 @@ import discord
 from discord.ext import commands
 import googlemaps
 import urllib.request 
+import urllib.parse
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -143,7 +144,8 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     author_name = "Nest "+nest_name
     nest_embed=discord.Embed(title=nest_title, url=title_url, description=address)
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
-    nest_img_path = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
+    nest_img_path = "raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
+    nest_img_path = "https://"+urllib.parse.quote(nest_img_path)
     mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon.lower()+".png"
     nest_embed.set_thumbnail(url=mon_img)
     nest_embed.set_image(url=nest_img_path)
