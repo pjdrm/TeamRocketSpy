@@ -14,6 +14,7 @@ from datetime import datetime as dt
 import discord
 from discord.ext import commands
 import googlemaps
+import urllib.request 
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -54,6 +55,16 @@ def create_mad_geofence(tr_cfg):
         mad_geofence += "\n"
     with open("mad_geofence.txt", "w+") as f:
             f.write(mad_geofence)
+            
+def download_static_map_img(tr_cfg, outdir):
+    nest_config_path = tr_spy_config["nest_config_path"]
+    api_key = tr_cfg["maps_api_key"]
+    with open(nest_config_path) as f:
+        nests = eval(f.read())
+    for nest in nests:
+        nest_center = nest["center"]
+        nest_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(nest_center[0])+","+str(nest_center[1])+"&key="+api_key
+        urllib.request.urlretrieve(nest_img_path, outdir+nest["name"]+".png")
     
 def inside_geofence(polygon, point):
     lat = point[0]
@@ -132,7 +143,7 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     author_name = "Nest "+nest_name
     nest_embed=discord.Embed(title=nest_title, url=title_url, description=address)
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
-    nest_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(nest_center[0])+","+str(nest_center[1])+"&key="+api_key
+    nest_img_path = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
     mon_img = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokemon-icons/"+nesting_mon.lower()+".png"
     nest_embed.set_thumbnail(url=mon_img)
     nest_embed.set_image(url=nest_img_path)
@@ -162,8 +173,9 @@ bot = commands.Bot(command_prefix="$")
 @bot.event
 async def on_ready():
     print("Going to report nests to Poketrainers")
-    print(NEST_CHANNEL_ID)
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
+    async for message in nest_channel.history():
+            await message.delete()
     for nest_name, nestig_mon, nest_center, address in FOUND_NESTS:
         await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, API_KEY)
     await bot.close()
@@ -180,3 +192,4 @@ NEST_CHANNEL_ID = None
 API_KEY = None
 find_nests(tr_spy_config)
 #create_mad_geofence(tr_spy_config)
+#download_static_map_img(tr_spy_config, "./config/nest_img/")
