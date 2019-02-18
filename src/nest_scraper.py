@@ -155,7 +155,6 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
 async def get_current_nests(nest_channel):
     current_nests = {}
     async for message in nest_channel.history():
-            print(message)
             pokemon = message.embeds[0]._fields[0]["value"]
             nest_name = message.embeds[0].title.replace("Directions to ", "")
             current_nests[nest_name] = pokemon
