@@ -137,12 +137,12 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, api_key):
+async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp):
     print("Reporting nest %s" % nest_name)
     nest_title = "Directions to "+nest_name
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
     author_name = "Nest "+nest_name
-    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address)
+    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address, timestamp=time_stamp)
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
     nest_img_path = "raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
     nest_img_path = "https://"+urllib.parse.quote(nest_img_path)
@@ -186,7 +186,6 @@ def find_nests(tr_spy_config):
         print("-----------------")
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"]]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
-    API_KEY = tr_spy_config["maps_api_key"]
     bot.run(tr_spy_config["bot_token"])
 
 bot = commands.Bot(command_prefix="$")
@@ -195,14 +194,17 @@ bot = commands.Bot(command_prefix="$")
 async def on_ready():
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
     current_nests = await get_current_nests(nest_channel)
+    timestamp = dt.now()
     if is_nest_migration(current_nests, FOUND_NESTS):
         print("Going to report nests to Poketrainers")
         async for message in nest_channel.history():
                 await message.delete()
         for nest_name, nestig_mon, nest_center, address in FOUND_NESTS:
-            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, API_KEY)
+            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp)
     else:
-        print("There was no nest migration")
+        for nest_name, nestig_mon, nest_center, address in FOUND_NESTS:
+            if nest_name not in current_nests: #Case where we found a previously unreported nest
+                await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp)
     await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
@@ -214,9 +216,8 @@ with open("./config/tr_spy_config.json") as data_file:
    
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
-API_KEY = None
-find_nests(tr_spy_config)
-#create_mad_geofence(tr_spy_config)
+#find_nests(tr_spy_config)
+create_mad_geofence(tr_spy_config)
 #download_static_map_img(tr_spy_config, "./config/nest_img/")
 
 
