@@ -163,7 +163,9 @@ async def get_current_nests(nest_channel):
     
 def is_nest_migration(current_nests, new_nests):
     same_mon_count = 0
-    for nest_name, nestig_mon, nest_center, address in new_nests:
+    for nn  in new_nests:
+        nest_name = nn[0]
+        nestig_mon = nn[1]
         if nest_name in current_nests:
             current_nest_mon = current_nests[nest_name]
             if current_nest_mon == nestig_mon:
