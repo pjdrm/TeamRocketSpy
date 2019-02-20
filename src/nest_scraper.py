@@ -143,7 +143,7 @@ async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address
     nest_title = "Directions to "+nest_name
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
     author_name = "Nest "+nest_name
-    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address, timestamp=time_stamp, colour=discord.Colour(region_color))
+    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address, timestamp=time_stamp, colour=discord.Colour(int(region_color[1:], 16)))
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
     nest_img_path = "raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
     nest_img_path = "https://"+urllib.parse.quote(nest_img_path)
