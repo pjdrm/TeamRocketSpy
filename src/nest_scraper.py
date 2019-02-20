@@ -216,8 +216,8 @@ with open("./config/tr_spy_config.json") as data_file:
    
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
-#find_nests(tr_spy_config)
-create_mad_geofence(tr_spy_config)
+find_nests(tr_spy_config)
+#create_mad_geofence(tr_spy_config)
 #download_static_map_img(tr_spy_config, "./config/nest_img/")
 
 
