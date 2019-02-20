@@ -177,11 +177,11 @@ def is_nest_migration(current_nests, new_nests):
         return True
     
 def find_nests(tr_spy_config):
-    global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY
+    global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY, GEOFENCES
     mon_black_list = tr_spy_config["nest_mon_black_list"]
-    geofences = load_geofences(tr_spy_config)
+    GEOFENCES = load_geofences(tr_spy_config)
     spawns = get_spawns(tr_spy_config)
-    nests = assign_spawns(geofences, spawns)
+    nests = assign_spawns(GEOFENCES, spawns)
     for name in nests:
         nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
         if nestig_mon is not None:
@@ -199,17 +199,30 @@ async def on_ready():
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
     current_nests = await get_current_nests(nest_channel)
     timestamp = dt.now()
+    async for message in nest_channel.history():
+                await message.delete()
     if is_nest_migration(current_nests, FOUND_NESTS):
         print("Going to report nests to PokeTrainers")
-        async for message in nest_channel.history():
-                await message.delete()
         sorted(FOUND_NESTS, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
+        all_nests = []
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
-                await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
+                nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
+                all_nests.apped(nest_info)
+        for nest_name in current_nests:
+            nestig_mon = current_nests
+            nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
+            all_nests.apped(nest_info)
+            
+        sorted(all_nests, key=itemgetter(4))
+        for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
+            nest_center = GEOFENCES[nest_name]["center"]
+            address = GEOFENCES[nest_name]["address"]
+            region_color = GEOFENCES[nest_name]["color"]
+            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
@@ -221,6 +234,7 @@ with open("./config/tr_spy_config.json") as data_file:
    
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
+GEOFENCES = None
 find_nests(tr_spy_config)
 #create_mad_geofence(tr_spy_config)
 #download_static_map_img(tr_spy_config, "./config/nest_img/")
