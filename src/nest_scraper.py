@@ -211,11 +211,11 @@ async def on_ready():
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
                 nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
-                all_nests.apped(nest_info)
+                all_nests.append(nest_info)
         for nest_name in current_nests:
             nestig_mon = current_nests
             nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
-            all_nests.apped(nest_info)
+            all_nests.append(nest_info)
             
         sorted(all_nests, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
