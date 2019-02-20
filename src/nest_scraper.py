@@ -137,12 +137,12 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp):
+async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
     print("Reporting nest %s" % nest_name)
     nest_title = "Directions to "+nest_name
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
     author_name = "Nest "+nest_name
-    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address, timestamp=time_stamp)
+    nest_embed=discord.Embed(title=nest_title, url=title_url, description=address, timestamp=time_stamp, colour=discord.Colour(region_color))
     nest_embed.set_author(name=author_name, icon_url="https://png.icons8.com/color/1600/map-pokemon")
     nest_img_path = "raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/nest_img/"+nest_name+".png"
     nest_img_path = "https://"+urllib.parse.quote(nest_img_path)
@@ -182,9 +182,9 @@ def find_nests(tr_spy_config):
         nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
-            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"]])
+            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
         print("-----------------")
-    #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"]]
+    #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"], "#FF5252"]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     bot.run(tr_spy_config["bot_token"])
 
@@ -199,12 +199,12 @@ async def on_ready():
         print("Going to report nests to Poketrainers")
         async for message in nest_channel.history():
                 await message.delete()
-        for nest_name, nestig_mon, nest_center, address in FOUND_NESTS:
-            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp)
+        for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
+            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
-        for nest_name, nestig_mon, nest_center, address in FOUND_NESTS:
+        for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
-                await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp)
+                await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
