@@ -210,18 +210,19 @@ async def on_ready():
         all_nests = []
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
-                nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
+                nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
                 all_nests.append(nest_info)
+                
         for nest_name in current_nests:
             nestig_mon = current_nests
-            nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color]
+            nest_center = GEOFENCES[nest_name]["center"]
+            address = GEOFENCES[nest_name]["address"]
+            region_color = GEOFENCES[nest_name]["color"]
+            nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
             all_nests.append(nest_info)
             
         sorted(all_nests, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
-            nest_center = GEOFENCES[nest_name]["center"]
-            address = GEOFENCES[nest_name]["address"]
-            region_color = GEOFENCES[nest_name]["color"]
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
 
