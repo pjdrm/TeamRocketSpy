@@ -108,6 +108,7 @@ def assign_spawns(geofences, spawns):
             nests[gf_name]["spawns"] = []
             nests[gf_name]["address"] = geofence["address"]
             nests[gf_name]["center"] = geofence["center"]
+            nests[gf_name]["color"] = geofence["color"]
         nests[gf_name]["spawns"].append(spawn["pokemon_id"])
     for geofence in geofences:
         name = geofence["name"]
