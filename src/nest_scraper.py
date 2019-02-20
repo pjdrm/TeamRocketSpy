@@ -16,6 +16,7 @@ from discord.ext import commands
 import googlemaps
 import urllib.request 
 import urllib.parse
+from operator import itemgetter
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -199,9 +200,10 @@ async def on_ready():
     current_nests = await get_current_nests(nest_channel)
     timestamp = dt.now()
     if is_nest_migration(current_nests, FOUND_NESTS):
-        print("Going to report nests to Poketrainers")
+        print("Going to report nests to PokeTrainers")
         async for message in nest_channel.history():
                 await message.delete()
+        sorted(FOUND_NESTS, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
