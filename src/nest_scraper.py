@@ -220,7 +220,10 @@ async def on_ready():
                 
         for nest_name in current_nests:
             nestig_mon = current_nests
-            nest_center = GEOFENCES[nest_name]["center"]
+            for geofence in GEOFENCES:
+                if geofence["name"] == nest_name:
+                    nest_center = geofence["center"]
+                    break
             address = GEOFENCES[nest_name]["address"]
             region_color = GEOFENCES[nest_name]["color"]
             nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
