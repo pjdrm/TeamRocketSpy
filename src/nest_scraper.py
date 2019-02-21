@@ -199,14 +199,15 @@ bot = commands.Bot(command_prefix="$")
     
 @bot.event
 async def on_ready():
+    global FOUND_NESTS
     nest_channel = bot.get_channel(NEST_CHANNEL_ID)
     current_nests = await get_current_nests(nest_channel)
     timestamp = dt.now()
     async for message in nest_channel.history():
                 await message.delete()
     if is_nest_migration(current_nests, FOUND_NESTS):
-        print("Going to report nests to PokeTrainers")
-        sorted(FOUND_NESTS, key=itemgetter(5))
+        print("Going to report nest migration to PokeTrainers")
+        FOUND_NESTS = sorted(FOUND_NESTS, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
@@ -223,13 +224,13 @@ async def on_ready():
             for geofence in GEOFENCES:
                 if geofence["name"] == nest_name:
                     nest_center = geofence["center"]
+                    address = geofence["address"]
+                    region_color = geofence["color"]
                     break
-            address = GEOFENCES[nest_name]["address"]
-            region_color = GEOFENCES[nest_name]["color"]
             nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
             all_nests.append(nest_info)
             
-        sorted(all_nests, key=itemgetter(5))
+        all_nests = sorted(all_nests, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
