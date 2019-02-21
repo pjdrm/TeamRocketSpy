@@ -208,7 +208,7 @@ async def on_ready():
         print("Going to report nests to PokeTrainers")
         sorted(FOUND_NESTS, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
-            await report_nest_flag(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
+            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
         all_nests = []
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
