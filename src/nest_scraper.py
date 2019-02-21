@@ -140,7 +140,7 @@ def get_spawns(config):
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
 
-async def report_nest_flag(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
+async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
     print("Reporting nest %s" % nest_name)
     nest_title = "Directions to "+nest_name
     title_url = "https://www.google.com/maps/search/?api=1&query="+str(nest_center[0])+"%2C"+str(nest_center[1])
@@ -226,7 +226,7 @@ async def on_ready():
             
         sorted(all_nests, key=itemgetter(4))
         for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
-            await report_nest_flag(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
+            await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
 
 with open("./config/pokemon.json") as data_file:    
