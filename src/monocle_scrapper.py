@@ -28,7 +28,7 @@ def get_gym_name(fort_id, cnx):
 
 def get_team(fort_id, cnx):
     cursor = cnx.cursor()
-    query = "select team from forts where fort_id="+str(fort_id)+";"
+    query = "select team from fort_sightings where fort_id="+str(fort_id)+";"
     cursor.execute(query)
     team_id = cursor.fetchone()[0]
     if team_id == 1:
