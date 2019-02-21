@@ -192,7 +192,7 @@ def find_nests(tr_spy_config, report_nest):
         
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"], "#FF5252"]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
-    if report_nest:
+    if report_nest == 1:
         bot.run(tr_spy_config["bot_token"])
 
 bot = commands.Bot(command_prefix="$")
@@ -241,7 +241,7 @@ NEST_CHANNEL_ID = None
 GEOFENCES = None
 
 if __name__ == "__main__":
-    report_nest = True
+    report_nest = 1
     if len(sys.argv) == 2:
         report_nest = sys.argv[1]
     find_nests(tr_spy_config, report_nest)
