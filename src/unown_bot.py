@@ -335,14 +335,23 @@ class UnownBot():
     def get_attack_type(self, attack):
         return self.type_emojis[self.move_type[attack]]
         
-    async def report_boss_moveset(self, gym_channel, moveset, user, user_icon):
-        fast_attack = moveset[0]
+    async def report_boss_moveset(self, gym_channel, attack_info, user, user_icon):
+        fast_attack = attack_info[0]
         fast_attack += " "+self.get_attack_type(fast_attack)
-        charge_attack = moveset[1]
+        charge_attack = attack_info[1]
         charge_attack += " "+self.get_attack_type(charge_attack)
-        moveset_embed=discord.Embed(title="**Raid Boss Moves**:", color=SIDEBAR_EMBED_COLOR)
+        team = attack_info[2]
+        if team[0] == "M":
+            gym_info = "<:mystic:399568286439964672>"
+        elif team[0] == "V":
+            gym_info = "<:valor:399568286351753228>"
+        else:   
+            gym_info = "<:instinct:399568286033117197>"
+        gym_info = "Team "+team+gym_info
+        moveset_embed=discord.Embed(title="**Raid Info**:", color=SIDEBAR_EMBED_COLOR)
         moveset_embed.add_field(name="Fast", value=fast_attack, inline=True)
         moveset_embed.add_field(name="Charge", value=charge_attack, inline=True)
+        moveset_embed.add_field(name="Gym control", value=gym_info, inline=False)
         moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
         await gym_channel.send(embed=moveset_embed)
         

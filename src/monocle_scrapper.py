@@ -26,6 +26,18 @@ def get_gym_name(fort_id, cnx):
     cursor.execute(query)
     return cursor.fetchone()[0]
 
+def get_team(fort_id, cnx):
+    cursor = cnx.cursor()
+    query = "select team from forts where fort_id="+str(fort_id)+";"
+    cursor.execute(query)
+    team_id = cursor.fetchone()[0]
+    if team_id == 1:
+        return "Mystic"
+    elif team_id == 2:
+        return "Valor"
+    elif team_id == 3:
+        return "Instinct"
+    
 def get_pokestop_name(guid, cnx):
     cursor = cnx.cursor()
     query = "select name from pokestops where external_id='"+str(guid)+"';"
@@ -138,6 +150,7 @@ def scrape_monocle_db(config):
             hatched = True
             
         gym_name = get_gym_name(fort_id, cnx)
+        team = get_team(fort_id, cnx)
         if gym_name is None:
             #print("WARNING: unknown for id: %d" % fort_id)
             found_gym, gym_name = populate_gym_name(fort_id, db_config)
@@ -153,7 +166,7 @@ def scrape_monocle_db(config):
                      'gym_name': gym_name,
                      'hatched': hatched}
         if pokemon_id is not None:
-            raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2]]
+            raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2], team]
         if is_present_raid(raid_dict):
             raid_list.append(raid_dict)
         
