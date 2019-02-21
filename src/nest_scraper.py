@@ -206,7 +206,7 @@ async def on_ready():
                 await message.delete()
     if is_nest_migration(current_nests, FOUND_NESTS):
         print("Going to report nests to PokeTrainers")
-        sorted(FOUND_NESTS, key=itemgetter(4))
+        sorted(FOUND_NESTS, key=itemgetter(5))
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
@@ -224,7 +224,7 @@ async def on_ready():
             nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
             all_nests.append(nest_info)
             
-        sorted(all_nests, key=itemgetter(4))
+        sorted(all_nests, key=itemgetter(5))
         for nest_name, nestig_mon, nest_center, address, region_color in all_nests:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     await bot.close()
