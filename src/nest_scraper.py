@@ -210,9 +210,11 @@ async def on_ready():
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             await report_nest(nest_channel, nest_name, nestig_mon, nest_center, address, timestamp, region_color)
     else:
+        print("Going to UPDATE nests to PokeTrainers")
         all_nests = []
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
+                print("New nest: %s" % nest_name)
                 nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
                 all_nests.append(nest_info)
                 
@@ -243,7 +245,7 @@ GEOFENCES = None
 if __name__ == "__main__":
     report_nest_flag = 1
     if len(sys.argv) == 2:
-        report_nest_flag = sys.argv[1]
+        report_nest_flag = int(sys.argv[1])
     find_nests(tr_spy_config, report_nest_flag)
     #create_mad_geofence(tr_spy_config)
     #download_static_map_img(tr_spy_config, "./config/nest_img/")
