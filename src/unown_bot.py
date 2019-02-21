@@ -345,7 +345,7 @@ class UnownBot():
             gym_info = "<:valor:399568286351753228>"
         else:   
             gym_info = "<:instinct:399568286033117197>"
-        gym_info = "Team "+team+gym_info
+        gym_info += " Team "+team
         moveset_embed=discord.Embed(title="**Raid Info**", color=SIDEBAR_EMBED_COLOR)
         moveset_embed.add_field(name="Boss Attacks:", value=fast_attack+"\n"+charge_attack, inline=False)
         moveset_embed.add_field(name="Gym Control:", value=gym_info, inline=False)
