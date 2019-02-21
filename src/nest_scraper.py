@@ -17,6 +17,7 @@ import googlemaps
 import urllib.request 
 import urllib.parse
 from operator import itemgetter
+import sys
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -176,7 +177,7 @@ def is_nest_migration(current_nests, new_nests):
     else:
         return True
     
-def find_nests(tr_spy_config):
+def find_nests(tr_spy_config, report_nest):
     global FOUND_NESTS, NEST_CHANNEL_ID, API_KEY, GEOFENCES
     mon_black_list = tr_spy_config["nest_mon_black_list"]
     GEOFENCES = load_geofences(tr_spy_config)
@@ -186,8 +187,10 @@ def find_nests(tr_spy_config):
         nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
-            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
+            if report_nest:
+                FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
         print("-----------------")
+        
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"], "#FF5252"]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     bot.run(tr_spy_config["bot_token"])
@@ -236,8 +239,13 @@ with open("./config/tr_spy_config.json") as data_file:
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
 GEOFENCES = None
-find_nests(tr_spy_config)
-#create_mad_geofence(tr_spy_config)
-#download_static_map_img(tr_spy_config, "./config/nest_img/")
+
+if __name__ == "__main__":
+    report_nest = True
+    if len(sys.argv) == 2:
+        report_nest = sys.argv[1]
+    find_nests(tr_spy_config, report_nest)
+    #create_mad_geofence(tr_spy_config)
+    #download_static_map_img(tr_spy_config, "./config/nest_img/")
 
 
