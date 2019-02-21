@@ -336,10 +336,8 @@ class UnownBot():
         return self.type_emojis[self.move_type[attack]]
         
     async def report_boss_moveset(self, gym_channel, attack_info, user, user_icon):
-        fast_attack = attack_info[0]
-        fast_attack += " "+self.get_attack_type(fast_attack)
-        charge_attack = attack_info[1]
-        charge_attack += " "+self.get_attack_type(charge_attack)
+        fast_attack = self.get_attack_type(attack_info[0])+" "+attack_info[0]
+        charge_attack = self.get_attack_type(attack_info[1])+" "+attack_info[1]
         team = attack_info[2]
         if team[0] == "M":
             gym_info = "<:mystic:399568286439964672>"
