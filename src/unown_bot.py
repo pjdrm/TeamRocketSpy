@@ -349,8 +349,7 @@ class UnownBot():
             gym_info = "<:instinct:399568286033117197>"
         gym_info = "Team "+team+gym_info
         moveset_embed=discord.Embed(title="**Raid Info**", color=SIDEBAR_EMBED_COLOR)
-        moveset_embed.add_field(name="Boss Attacks", value=fast_attack, inline=True)
-        moveset_embed.add_field(name="", value=charge_attack, inline=False)
+        moveset_embed.add_field(name="Boss Attacks", value=fast_attack+" "+charge_attack, inline=False)
         moveset_embed.add_field(name="Gym Control", value=gym_info, inline=False)
         moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
         await gym_channel.send(embed=moveset_embed)
