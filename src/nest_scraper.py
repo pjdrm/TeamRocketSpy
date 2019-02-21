@@ -187,13 +187,13 @@ def find_nests(tr_spy_config, report_nest):
         nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
-            if report_nest:
-                FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
+            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
         print("-----------------")
         
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"], "#FF5252"]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
-    bot.run(tr_spy_config["bot_token"])
+    if report_nest:
+        bot.run(tr_spy_config["bot_token"])
 
 bot = commands.Bot(command_prefix="$")
     
