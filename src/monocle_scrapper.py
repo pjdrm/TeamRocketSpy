@@ -24,7 +24,9 @@ def get_gym_name(fort_id, cnx):
     cursor = cnx.cursor(buffered=True)
     query = "select name from forts where id="+str(fort_id)+" limit 1;"
     cursor.execute(query)
-    return cursor.fetchone()[0]
+    gym_name = cursor.fetchone()[0]
+    cursor.fetchall()
+    return gym_name
 
 def get_team(fort_id, cnx):
     cursor = cnx.cursor()
