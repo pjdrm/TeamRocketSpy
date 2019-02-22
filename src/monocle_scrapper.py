@@ -21,7 +21,7 @@ def load_move_protos(move_protos_file):
     return moves_dict_final
         
 def get_gym_name(fort_id, cnx):
-    cursor = cnx.cursor()
+    cursor = cnx.cursor(buffered=True)
     query = "select name from forts where id="+str(fort_id)+";"
     cursor.execute(query)
     for (name) in cursor:
@@ -29,7 +29,7 @@ def get_gym_name(fort_id, cnx):
     return gym_name
 
 def get_team(fort_id, cnx):
-    cursor = cnx.cursor()
+    cursor = cnx.cursor(buffered=True)
     query = "select team from fort_sightings where fort_id="+str(fort_id)+";"
     cursor.execute(query)
     team_id = cursor.fetchone()[0]
