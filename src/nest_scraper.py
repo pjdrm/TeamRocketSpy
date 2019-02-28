@@ -88,14 +88,22 @@ def find_nesting_mon(spawns, nest_name, black_mon_list):
     ordered_spawn_counts = spawn_counts.most_common(5)
     ordered_spawn_counts.reverse()
     nest_mon = None
+    low_count_flag = None
     print("Finding nesting species for %s" % nest_name)
     for mon_id, mon_count in ordered_spawn_counts:
         mon_name = POKE_INFO[str(mon_id)]["name"]
         print("species: %s count: %d"%(mon_name, mon_count))
         if mon_name not in black_mon_list:
-            nest_mon = mon_name
+            if mon_count > 4:
+                nest_mon = mon_name
+                low_count_flag = False
+            else:
+                low_count_flag = True
     if nest_mon is None:
-        print("WARNING: could not find nest pokemon")
+        if low_count_flag:
+            print("WARNING: pokemon counts are too low to report nest")
+        else:
+            print("WARNING: could not find nest pokemon")
     return nest_mon
         
 def assign_spawns(geofences, spawns):
