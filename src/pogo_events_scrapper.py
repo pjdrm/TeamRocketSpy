@@ -40,7 +40,7 @@ class PogoEventsScrapper():
                 
         for event_link in event_links:
             self.driver.get(event_link)
-            event_desc = self.driver.find_elements_by_xpath('//*[@id="text"]/div[2]')
+            event_desc = self.driver.find_elements_by_xpath('//*[@id="-text"]/div[2]')
             if len(event_desc) > 1:
                 for ed in event_desc:
                     if "Europe" in ed.get_attribute("innerText"):
