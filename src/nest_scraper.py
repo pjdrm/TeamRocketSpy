@@ -224,7 +224,7 @@ async def on_ready():
         for nest_name, nestig_mon, nest_center, address, region_color in FOUND_NESTS:
             if nest_name not in current_nests: #Case where we found a previously unreported nest
                 print("New nest: %s" % nest_name)
-                nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
+                nest_info = [nest_name, nestig_mon, nest_center, address, region_color]
                 all_nests.append(nest_info)
                 
         for nest_name in current_nests:
@@ -235,7 +235,7 @@ async def on_ready():
                     address = geofence["address"]
                     region_color = geofence["color"]
                     break
-            nest_info = [nest_channel, nest_name, nestig_mon, nest_center, address, region_color]
+            nest_info = [nest_name, nestig_mon, nest_center, address, region_color]
             all_nests.append(nest_info)
             
         all_nests = sorted(all_nests, key=itemgetter(4))
