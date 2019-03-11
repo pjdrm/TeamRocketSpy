@@ -168,7 +168,7 @@ class UnownBot():
         return filtered_raids
     
     def filter_quest(self, quest):
-        if self.reward_filters == "None":
+        if self.reward_filters == "None" or self.reward_filters[0] == "all":
             return False
         for reward_filter in self.reward_filters:
             if reward_filter in quest["reward"]:
@@ -200,8 +200,8 @@ class UnownBot():
             for quest in quest_list:
                 if not self.filter_quest(quest) and quest["pokestop"] not in active_quests:
                     await self.create_quest(quest)
-                else:
-                    print("Discarding quest: %s" % quest)
+                #else:
+                #    print("Discarding quest: %s" % quest)
             await asyncio.sleep(1800) #30m
             
     async def check_pogo_events(self):
