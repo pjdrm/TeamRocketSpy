@@ -110,7 +110,7 @@ class UnownBot():
     async def load_active_quests(self):
         active_quests = {}
         channel = self.bot.get_channel(self.active_quests_channel_id)
-        async for message in channel.history():
+        async for message in channel.history(limit=2000):
             ps_name = message.embeds[0]._author["name"]
             active_quests[ps_name] = True
             print("Quest load: %s" % ps_name)
@@ -196,7 +196,6 @@ class UnownBot():
             print("Quest scraping")
             active_quests = await self.load_active_quests()
             quest_list = scrape_monocle_quests(self.tr_spy_config)
-            print(quest_list)
             for quest in quest_list:
                 if not self.filter_quest(quest) and quest["pokestop"] not in active_quests:
                     await self.create_quest(quest)
