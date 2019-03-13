@@ -7,7 +7,6 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import mysql.connector
 from collections import Counter
-import operator
 import json
 import datetime
 from datetime import datetime as dt
@@ -105,7 +104,17 @@ def find_nesting_mon(spawns, nest_name, black_mon_list):
         else:
             print("WARNING: could not find nest pokemon")
     return nest_mon
-        
+
+def get_migration_timestamp():
+    current_timestamp = dt.now()
+    seed_timestamp = dt.strptime(NEST_MIGRATION_DATE_SEED, '%Y-%m-%d %H:%M')
+    prev_migration_ts = seed_timestamp
+    while True:
+        if seed_timestamp > current_timestamp:
+            return prev_migration_ts
+        prev_migration_ts = seed_timestamp
+        seed_timestamp = seed_timestamp+ datetime.timedelta(days=7)
+    
 def assign_spawns(geofences, spawns):
     nests = {}
     for spawn in spawns:
@@ -140,10 +149,11 @@ def get_spawns(config):
     cursor.execute(query)
     
     spawns = []
-    current_timestamp = dt.now().strftime("%Y-%m-%d")
+    migration_timestamp = get_migration_timestamp()
+    print(migration_timestamp.strftime('Last migration was on %d, %b %Y'))
     for (pokemon_id, lat, lon, updated) in cursor:
-        timestamp_timestamp = datetime.datetime.fromtimestamp(updated).strftime("%Y-%m-%d")
-        if timestamp_timestamp != current_timestamp:
+        spawn_timestamp = datetime.datetime.fromtimestamp(updated)
+        if spawn_timestamp > migration_timestamp:
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
@@ -253,6 +263,7 @@ with open("./config/tr_spy_config.json") as data_file:
 FOUND_NESTS = []
 NEST_CHANNEL_ID = None
 GEOFENCES = None
+NEST_MIGRATION_DATE_SEED = "2019-02-21 22:00"
 
 if __name__ == "__main__":
     report_nest_flag = 1
