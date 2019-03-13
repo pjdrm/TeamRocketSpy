@@ -238,7 +238,7 @@ async def on_ready():
                 all_nests.append(nest_info)
                 
         for nest_name in current_nests:
-            nestig_mon = current_nests
+            nestig_mon = current_nests[nest_name]
             for geofence in GEOFENCES:
                 if geofence["name"] == nest_name:
                     nest_center = geofence["center"]
