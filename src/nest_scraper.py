@@ -153,7 +153,7 @@ def get_spawns(config):
     print(migration_timestamp.strftime('Last migration was on %d, %b %Y'))
     for (pokemon_id, lat, lon, updated) in cursor:
         spawn_timestamp = datetime.datetime.fromtimestamp(updated)
-        if spawn_timestamp > migration_timestamp:
+        if spawn_timestamp < migration_timestamp:
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
     return spawns
