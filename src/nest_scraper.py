@@ -145,17 +145,27 @@ def get_spawns(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT pokemon_id, lat, lon, updated FROM sightings"
+    query = "SELECT id, pokemon_id, lat, lon, updated FROM sightings"
     cursor.execute(query)
     
     spawns = []
+    to_del_spawns = []
     migration_timestamp = get_migration_timestamp()
     print(migration_timestamp.strftime('Last migration was on %d, %b %Y'))
-    for (pokemon_id, lat, lon, updated) in cursor:
+    for (id, pokemon_id, lat, lon, updated) in cursor:
         spawn_timestamp = datetime.datetime.fromtimestamp(updated)
         if spawn_timestamp < migration_timestamp:
+            to_del_spawns.append(id)
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
+        
+    del_spawns_query = "DELETE FROM sightings WHERE "
+    for id in to_del_spawns:
+        del_spawns_query += "id = "+str(id)+" OR "
+    del_spawns_query = del_spawns_query[:-3]
+    del_spawns_query += ";"
+    cursor = cnx.cursor(buffered=True)
+    cursor.execute(query)
     return spawns
 
 async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
