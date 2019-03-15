@@ -165,7 +165,7 @@ def get_spawns(config):
     del_spawns_query = del_spawns_query[:-3]
     del_spawns_query += ";"
     cursor = cnx.cursor(buffered=True)
-    cursor.execute(query)
+    cursor.execute(del_spawns_query)
     return spawns
 
 async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
