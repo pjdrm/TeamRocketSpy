@@ -133,7 +133,6 @@ def scrape_monocle_db(config):
                   "raise_on_warnings": True,
                   "autocommit": True}
     
-    print("Starting Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     

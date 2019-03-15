@@ -185,6 +185,7 @@ class UnownBot():
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
+            print(time_stamp +" Starting Monocle scrape")
             raid_list = scrape_monocle_db(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
