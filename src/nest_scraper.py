@@ -113,7 +113,7 @@ def get_migration_timestamp():
         if seed_timestamp > current_timestamp:
             return prev_migration_ts
         prev_migration_ts = seed_timestamp
-        seed_timestamp = seed_timestamp+ datetime.timedelta(days=7)
+        seed_timestamp = seed_timestamp+ datetime.timedelta(days=14)
     
 def assign_spawns(geofences, spawns):
     nests = {}

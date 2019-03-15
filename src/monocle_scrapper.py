@@ -188,7 +188,6 @@ def scrape_monocle_quests(config):
     cursor.execute(query)
     
     quest_list = []
-    
     for (GUID, quest_timestamp, quest_stardust, quest_pokemon_id, quest_item_id, quest_item_amount, quest_task) in cursor:
         quest_timestamp = datetime.datetime.fromtimestamp(quest_timestamp).strftime("%Y-%m-%d")
         current_timestamp =dt.now().strftime("%Y-%m-%d")
