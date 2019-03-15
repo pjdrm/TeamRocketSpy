@@ -159,13 +159,12 @@ def get_spawns(config):
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
         
-    del_spawns_query = "DELETE FROM sightings WHERE "
-    for id in to_del_spawns:
-        del_spawns_query += "id = "+str(id)+" OR "
-    del_spawns_query = del_spawns_query[:-3]
-    del_spawns_query += ";"
-    cursor = cnx.cursor(buffered=True)
-    cursor.execute(del_spawns_query)
+    n_dels = len(to_del_spawns)
+    for i, id in enumerate(to_del_spawns):
+        print("Deleting spawn %d/%d"%(i, n_dels))
+        del_spawns_query += "DELETE FROM sightings WHERE id = "+str(id)+";"
+        cursor = cnx.cursor(buffered=True)
+        cursor.execute(del_spawns_query)
     return spawns
 
 async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
