@@ -30,24 +30,15 @@ class PogoEventsScrapper():
         self.driver.get('https://p337.info/pokemongo/')
         pogo_event_list = []
         event_links = []
-        for i in range(1, 10):
-            event_icon = self.driver.find_elements_by_xpath('//*[@id="container_right"]/a['+str(i)+']/div/div[@class="extra_timer_left"]/img')
-            if len(event_icon) == 0:
+        for event_el in self.driver.find_elements_by_xpath('//*[@id="container_right"]/a'):
+            event_link = event_el.get_attribute("href")
+            if event_link == "https://p337.info/pokemongo/countdowns/community-day.php":
                 break
-            event = self.driver.find_elements_by_xpath('//*[@id="container_right"]/a['+str(i)+']')
-            event_link = event[0].get_attribute("href")
             event_links.append(event_link)
                 
         for event_link in event_links:
             self.driver.get(event_link)
-            event_desc = self.driver.find_elements_by_xpath('//*[@id="-text"]/div[2]')
-            if len(event_desc) > 1:
-                for ed in event_desc:
-                    if "Europe" in ed.get_attribute("innerText"):
-                        event_desc = ed.get_attribute("innerText")
-                        break
-            else:
-                event_desc = event_desc[0].get_attribute("innerText")
+            event_desc = self.driver.find_elements_by_xpath('//*[@class="clock_contain mas"]')[0].get_attribute("innerText")
             if ("Your Local Time:" not in event_desc) or ("have Ended" in event_desc) or ("has Ended" in event_desc):
                 continue
             split_str = event_desc.split("Your Local Time:")
@@ -64,7 +55,11 @@ class PogoEventsScrapper():
                 date = "Starts: "+date
             else:
                 desc = event_name.replace(" Ends", "").replace(" End", "")
-                date = "Ends: "+date
+                date_obj = datetime.strptime(date.split(" ")[1], "%d-%b-%Y")
+                if date_obj < datetime.now():
+                    date = "Is over"
+                else:
+                    date = "Ends: "+date
             desc = desc.replace(" in", "")
             pogo_event_list.append({"desc": desc, "date": date})
         return pogo_event_list
