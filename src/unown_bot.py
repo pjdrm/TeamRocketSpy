@@ -339,17 +339,18 @@ class UnownBot():
         fast_attack = self.get_attack_type(attack_info[0])+" "+attack_info[0]
         charge_attack = self.get_attack_type(attack_info[1])+" "+attack_info[1]
         team = attack_info[2]
-        if team[0] == "M":
-            gym_info = "<:mystic:399568286439964672>"
-        elif team[0] == "V":
-            gym_info = "<:valor:399568286351753228>"
-        else:   
-            gym_info = "<:instinct:399568286033117197>"
-        gym_info += " Team "+team
         moveset_embed=discord.Embed(title="**Raid Info**", color=SIDEBAR_EMBED_COLOR)
         moveset_embed.add_field(name="Boss Attacks:", value=fast_attack+"\n"+charge_attack, inline=False)
-        moveset_embed.add_field(name="Gym Control:", value=gym_info, inline=False)
         moveset_embed.set_footer(text="Requested by "+user, icon_url=user_icon)
+        if team is not None:
+            if team[0] == "M":
+                gym_info = "<:mystic:399568286439964672>"
+            elif team[0] == "V":
+                gym_info = "<:valor:399568286351753228>"
+            else:   
+                gym_info = "<:instinct:399568286033117197>"
+            gym_info += " Team "+team
+            moveset_embed.add_field(name="Gym Control:", value=gym_info, inline=False)
         await gym_channel.send(embed=moveset_embed)
         
     async def get_raid_annouce(self, gym_channel):
