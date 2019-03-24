@@ -162,7 +162,7 @@ def get_spawns(config):
     n_dels = len(to_del_spawns)
     for i, id in enumerate(to_del_spawns):
         print("Deleting spawn %d/%d"%(i, n_dels))
-        del_spawns_query += "DELETE FROM sightings WHERE id = "+str(id)+";"
+        del_spawns_query = "DELETE FROM sightings WHERE id = "+str(id)+";"
         cursor = cnx.cursor(buffered=True)
         cursor.execute(del_spawns_query)
     return spawns
