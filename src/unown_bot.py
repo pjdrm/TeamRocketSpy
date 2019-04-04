@@ -113,7 +113,7 @@ class UnownBot():
         async for message in channel.history(limit=2000):
             ps_name = message.embeds[0]._author["name"]
             active_quests[ps_name] = True
-            print("Quest load: %s" % ps_name)
+            #print("Quest load: %s" % ps_name)
         return active_quests
     
     def load_gyms(self, gyms_file, region_map):
@@ -290,7 +290,7 @@ class UnownBot():
         return raid_channel_name
     
     def channel_2_raid_channel_name_short(self, channel):
-        raid_channel_name_short = channel.name.replace("alolan-", "")
+        raid_channel_name_short = channel.name.replace("alolan-", "").replace("origin-", "")
         if raid_channel_name_short.startswith("tier"):
             raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
         else:
