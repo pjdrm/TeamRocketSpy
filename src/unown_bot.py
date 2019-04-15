@@ -384,7 +384,7 @@ class UnownBot():
                 return
                 
         raid_channel_name = self.gym_name_2_raid_channel_name_short(raid_info["gym_name"])
-        is_active_raid = raid_channel_name in self.active_raids
+        is_active_raid = (raid_channel_name in self.active_raids) or (raid_channel_name in self.issued_raids)
         
         if 'move_set' in raid_info:
             self.boss_movesets[raid_channel_name] = raid_info['move_set']
