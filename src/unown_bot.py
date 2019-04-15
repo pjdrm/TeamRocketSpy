@@ -190,7 +190,7 @@ class UnownBot():
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
-            await asyncio.sleep(60)
+            await asyncio.sleep(100)
             
     async def check_pogo_quests(self):
         while True:
