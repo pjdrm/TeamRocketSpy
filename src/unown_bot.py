@@ -512,7 +512,7 @@ class UnownBot():
         
         @self.bot.command(pass_context=True)
         async def events(ctx):
-            await ctx.message.channel.send(embed=self.pogo_events_embed)>
+            await ctx.message.channel.send(embed=self.pogo_events_embed)
             
         @self.bot.command(pass_context=True) #TODO: provide an actual list of available commands
         async def help(ctx, *args):
