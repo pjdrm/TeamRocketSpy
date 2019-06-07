@@ -56,6 +56,8 @@ class UnownBot():
         self.pogo_events_fp = self.tr_spy_config["pogo_events"]
         self.active_quests_channel_id = self.tr_spy_config["active_quests_channel_id"]
         self.report_quests_channel_id = self.tr_spy_config["report_quests_channel_id"]
+        self.pa_commons_chan_channel_id = self.tr_spy_config["pa_commons_channel_id"]
+        self.pa_rare_chan_channel_id = self.tr_spy_config["pa_rare_channel_id"]
         self.reward_filters = self.tr_spy_config["reward_filters"]
         self.report_log_file = log_file
         self.no_time_end_raids = []
@@ -216,6 +218,22 @@ class UnownBot():
                 self.pogo_events_embed = embed
                 print(pogo_events)
                 await asyncio.sleep(43200) #12h
+                
+    async def check_pokealarms(self):
+            while True:
+                dt_now = dt.now()
+                time_stamp = dt_now.strftime("%m-%d %H:%M")
+                print("%s Cleaning pokealarms"%time_stamp)
+                pa_commons_chan = self.bot.get_channel(self.pa_commons_chan_channel_id)
+                pa_rare_chan = self.bot.get_channel(self.pa_rare_chan_channel_id)
+                async for message in pa_commons_chan.history(2000)+pa_rare_chan.history(2000):
+                            alarm_date = message.created_at
+                            delta = alarm_date-dt_now
+                            if delta.days > 0:
+                                message.delete()
+                            elif delta.days*24*60 > 40:
+                                message.delete()
+                await asyncio.sleep(1800) #30m
             
     async def read_channel_messages(self, channel_name):
         print("read_channel_messages")
@@ -435,6 +453,7 @@ class UnownBot():
             self.bot.loop.create_task(self.check_scraped_raids())
             self.bot.loop.create_task(self.check_pogo_events())
             self.bot.loop.create_task(self.check_pogo_quests())
+            self.bot.loop.create_task(self.check_pokealarms())
             
         @self.bot.event
         async def on_guild_channel_delete(channel):
