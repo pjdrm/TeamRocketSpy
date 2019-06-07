@@ -504,11 +504,6 @@ class UnownBot():
                 if channel.name in "#the-bot-lab":
                     print("Going to autonone")
                     await channel.send("!auto none")
-                    
-        @self.bot.command(pass_context=True)
-        async def rt(ctx):
-            channel = self.bot.get_channel(586643432207024139)
-            await channel.send("$raid 5 \"casa da moeda\" 40")                    
         
         @self.bot.command(pass_context=True)
         async def events(ctx):
