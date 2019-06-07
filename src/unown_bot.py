@@ -224,18 +224,15 @@ class UnownBot():
             async for message in chan.history(limit=2000):
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
-                    if ((delta.days * 24 * 60 * 60) + delta.seconds)/60.0 > 40: #posted more than 40m ago
-                        #await message.delete()
-                        print("msg del")
-                    else:
-                        print("keep msg")
+                    if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 40: #created_at is returning one extra hour for some reason
+                        await message.delete()
         while True:
             dt_now = dt.now()
             time_stamp = dt_now.strftime("%m-%d %H:%M")
             print("%s Cleaning pokealarms"%time_stamp)
             pa_commons_chan = self.bot.get_channel(self.pa_commons_chan_channel_id)
             pa_rare_chan = self.bot.get_channel(self.pa_rare_chan_channel_id)
-            #await del_old_spawns(pa_rare_chan, dt_now)
+            await del_old_spawns(pa_rare_chan, dt_now)
             await del_old_spawns(pa_commons_chan, dt_now)
             await asyncio.sleep(1800) #30m
             
@@ -454,9 +451,9 @@ class UnownBot():
             print('UnownBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
-            #self.bot.loop.create_task(self.check_scraped_raids())
-            #self.bot.loop.create_task(self.check_pogo_events())
-            #self.bot.loop.create_task(self.check_pogo_quests())
+            self.bot.loop.create_task(self.check_scraped_raids())
+            self.bot.loop.create_task(self.check_pogo_events())
+            self.bot.loop.create_task(self.check_pogo_quests())
             self.bot.loop.create_task(self.check_pokealarms())
             
         @self.bot.event
