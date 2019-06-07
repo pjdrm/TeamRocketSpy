@@ -224,7 +224,7 @@ class UnownBot():
             async for message in chan.history(limit=2000):
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
-                    if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 40: #created_at is returning one extra hour for some reason
+                    if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
                         await message.delete()
         while True:
             dt_now = dt.now()
@@ -504,10 +504,15 @@ class UnownBot():
                 if channel.name in "#the-bot-lab":
                     print("Going to autonone")
                     await channel.send("!auto none")
+                    
+        @self.bot.command()
+        async def r():
+            channel = self.bot.get_channel(586643432207024139)
+            await channel.send("$raid 5 \"casa da moeda\" 40")                    
         
         @self.bot.command(pass_context=True)
         async def events(ctx):
-            await ctx.message.channel.send(embed=self.pogo_events_embed)
+            await ctx.message.channel.send(embed=self.pogo_events_embed)>
             
         @self.bot.command(pass_context=True) #TODO: provide an actual list of available commands
         async def help(ctx, *args):
