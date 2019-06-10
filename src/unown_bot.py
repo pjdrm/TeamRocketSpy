@@ -417,7 +417,7 @@ class UnownBot():
             if raid_info["raid_ends_in"] is not None:
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
-                time.sleep(1)
+                time.sleep(5)
                 await gym_channel.send("!left "+raid_info["raid_ends_in"])
                 self.no_time_end_raids.pop(raid_channel_name)
             
@@ -452,7 +452,7 @@ class UnownBot():
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
-            self.bot.loop.create_task(self.check_pogo_events())
+            #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pogo_quests())
             self.bot.loop.create_task(self.check_pokealarms())
             
