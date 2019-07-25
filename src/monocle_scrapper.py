@@ -224,17 +224,18 @@ def scrape_monocle_invasions(config):
     
     query = "SELECT name, incident_expiration FROM pokestops WHERE incident_start IS NOT null;"
     cursor.execute(query)
-    
+    current_time = dt.now()
+    current_time_int = int(time.time())
     for (name, incident_expiration) in cursor:
         if name == 'unknown':
             continue
         
-        current_time = int(time.time())
-        if current_time > incident_expiration:
+        if current_time_int > incident_expiration:
             continue
         
-        end_time_str = dt.fromtimestamp(incident_expiration).strftime('%H:%M')
-        print("Invasion at %s. Ends %s"%(name, end_time_str))
+        end_time = dt.fromtimestamp(incident_expiration)
+        del_time = str((end_time-current_time).minutes)
+        print("Invasion at %s. Ends %s. Delete after %s"%(name, end_time.strftime('%H:%M'), del_time))
      
 
 GYMS_INFO = "./config/gym_info.json"
