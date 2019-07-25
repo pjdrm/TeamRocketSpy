@@ -88,7 +88,7 @@ class UnownBot():
     def is_raid_channel(self, channel_name):
         channel_name = channel_name.replace("alolan-", "")
         first_word = channel_name.split("-")[0]
-        if channel_name.startswith(("tier")) or (first_word in self.raid_bosses):
+        if channel_name.startswith(("egg")) or (channel_name.startswith(("boss"))) or (channel_name.startswith(("expired"))) or (first_word in self.raid_bosses):
             return True
         else:
             return False
@@ -192,7 +192,7 @@ class UnownBot():
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
-            await asyncio.sleep(100)
+            await asyncio.sleep(180)
             
     async def check_pogo_quests(self):
         while True:
@@ -224,8 +224,11 @@ class UnownBot():
             async for message in chan.history(limit=2000):
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
+                    print("dt_now %s alarm_date %s delta: %s days %d secs %d"%(dt_now, alarm_date, delta, delta.days, delta.seconds))
+                    print((delta.days*24*60*60+delta.seconds)/60.0-60.0)
                     if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
                         await message.delete()
+                        print("Deleted message")
         while True:
             dt_now = dt.now()
             time_stamp = dt_now.strftime("%m-%d %H:%M")
@@ -309,9 +312,11 @@ class UnownBot():
         return raid_channel_name
     
     def channel_2_raid_channel_name_short(self, channel):
-        raid_channel_name_short = channel.name.replace("alolan-", "").replace("origin-", "")
-        if raid_channel_name_short.startswith("tier"):
-            raid_channel_name_short = raid_channel_name_short.split("tier-")[1][2:]
+        raid_channel_name_short = channel.name.replace("alolan-", "").replace("origin-", "").replace("expired-", "")
+        if raid_channel_name_short.startswith("egg"):
+            raid_channel_name_short = raid_channel_name_short.split("egg-")[1][2:]
+        elif raid_channel_name_short.startswith("boss"):
+            raid_channel_name_short = raid_channel_name_short.split("boss-")[1][2:]
         else:
             raid_channel_name_short = raid_channel_name_short.split("-")[1:]
             raid_channel_name_short = "-".join(raid_channel_name_short)
@@ -417,13 +422,13 @@ class UnownBot():
             if raid_info["raid_ends_in"] is not None:
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
-                time.sleep(5)
+                time.sleep(10)
                 await gym_channel.send("!left "+raid_info["raid_ends_in"])
                 self.no_time_end_raids.pop(raid_channel_name)
             
         if is_active_raid and raid_info["hatched"]:
             gym_channel = self.get_gym_channel(raid_channel_name)
-            if gym_channel.name.startswith(("tier")):
+            if gym_channel.name.startswith(("egg")) or gym_channel.name.startswith(("boss")):
                 print("Setting raid boss: %s" % str(raid_info))
                 await gym_channel.send("!boss "+raid_info["boss"], delete_after=2)
             if raid_channel_name in self.boss_movesets: #case where we first created a raid and later found out the boss moveset
@@ -529,10 +534,10 @@ if __name__ == "__main__":
     fetch_raidmons = False
     tr_spy_config_path = "./config/tr_spy_config.json"
     if len(sys.argv) == 2:
-        fetch_raidmons = sys.argv[1]
+        tr_spy_config_path = sys.argv[1]
     elif len(sys.argv) == 3:
         tr_spy_config_path = sys.argv[1]
-        fetch_raidmons = sys.argv[2]
+        fetch_raidmons = False
         
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
