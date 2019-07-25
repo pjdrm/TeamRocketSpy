@@ -123,7 +123,6 @@ def populate_gym_name(fort_id, db_config):
     return found_name, gym_name
 
 def scrape_monocle_db(config):
-    print("Starting Raid Monocle Scrape")
     current_hour = int(dt.now().strftime("%H"))
     if current_hour < 9:
         return [] #dont want to report and trigger notifications too early, might annoy users
@@ -181,7 +180,6 @@ def scrape_monocle_quests(config):
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
-    print("Starting Quest Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
@@ -218,15 +216,15 @@ def scrape_monocle_invasions(config):
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
-    print("Starting Invasion Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT name, incident_expiration FROM pokestops WHERE incident_start IS NOT null;"
+    query = "SELECT name, incident_expiration, lat, lon FROM pokestops WHERE incident_start IS NOT null;"
     cursor.execute(query)
     current_time = dt.now()
     current_time_int = int(time.time())
-    for (name, incident_expiration) in cursor:
+    invasions = []
+    for (name, incident_expiration, lat, lon) in cursor:
         if name == 'unknown':
             continue
         
@@ -234,9 +232,10 @@ def scrape_monocle_invasions(config):
             continue
         
         end_time = dt.fromtimestamp(incident_expiration)
-        del_time = str((end_time-current_time).seconds/60)
-        print("Invasion at %s. Ends %s. Delete after %s"%(name, end_time.strftime('%H:%M'), del_time))
-     
+        del_time = (end_time-current_time).seconds
+        print("Invasion at %s. Ends %s. Delete after %s"%(name, end_time.strftime('%H:%M'), str(del_time/60)))
+        invasions.append({"pokestop": name, "end_time": end_time, "del_time": del_time, "coords": [lat, lon]})
+    return invasions
 
 GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")

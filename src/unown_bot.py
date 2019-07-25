@@ -9,12 +9,13 @@ import json
 import unicodedata
 import time
 import asyncio
+import googlemaps
+import urllib.request
 from datetime import datetime as dt
 from fuzzywuzzy import process
-import signal
 import sys
 from asyncio.tasks import sleep
-from monocle_scrapper import scrape_monocle_db, scrape_monocle_quests
+from monocle_scrapper import scrape_monocle_db, scrape_monocle_quests, scrape_monocle_invasions
 from urllib.request import urlopen
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
@@ -63,6 +64,9 @@ class UnownBot():
         self.no_time_end_raids = []
         self.issued_raids = {}
         self.active_raids = None
+        self.active_invasions = []
+        self.api_key = self.tr_spy_config["maps_api_key"]
+        self.gmaps = googlemaps.Client(key=self.api_key)
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
         self.type_emojis = json.load(open("server-emojis.json"))
         self.move_type = json.load(open("pokemon-moves.json"))
@@ -187,7 +191,7 @@ class UnownBot():
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            print(time_stamp +" Starting Monocle scrape")
+            print(time_stamp +" Starting Raid Monocle scrape")
             raid_list = scrape_monocle_db(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
@@ -206,6 +210,16 @@ class UnownBot():
                 #    print("Discarding quest: %s" % quest)
             await asyncio.sleep(1800) #30m
             
+    async def check_pogo_invasion(self):
+            while True:
+                time_stamp = dt.now().strftime("%m-%d %H:%M")
+                print(time_stamp +" Starting Invasion Monocle scrape")
+                invasions = scrape_monocle_invasions(self.tr_spy_config)
+                for invasion in invasions:
+                    if invasion["pokestop"] not in self.active_invasions:
+                        await self.create_invasion(invasion)
+                await asyncio.sleep(180)
+                
     async def check_pogo_events(self):
             while True:
                 time_stamp = dt.now().strftime("%m-%d %H:%M")
@@ -450,6 +464,17 @@ class UnownBot():
         channel = self.bot.get_channel(self.report_quests_channel_id)
         await channel.send(quest_cmd)
         
+    async def create_invasion(self, invasion_info):
+        coords = invasion_info["coords"] #TODO: build dynamic json with this info
+        address = self.gmaps.reverse_geocode(coords)[0]["formatted_address"]
+        str_split = address.split(", ")
+        if len(str_split) == 4:
+            address = ", ".join(str_split[1:])
+        address_url = "https://www.google.com/maps/search/?api=1&query="+str(coords[0])+"%2C"+str(coords[1])
+        pokestop_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(coords[0])+","+str(coords[1])+"&key="+self.api_key
+        outdir = ""
+        urllib.request.urlretrieve(pokestop_img_path, outdir+invasion_info["pokestop"]+".png")
+        
     def run_discord_bot(self):
         @self.bot.event
         async def on_ready():
@@ -459,6 +484,7 @@ class UnownBot():
             self.bot.loop.create_task(self.check_scraped_raids())
             #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pogo_quests())
+            self.bot.loop.create_task(self.check_pogo_invasion())
             self.bot.loop.create_task(self.check_pokealarms())
             
         @self.bot.event
