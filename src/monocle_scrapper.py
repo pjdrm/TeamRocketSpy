@@ -234,7 +234,7 @@ def scrape_monocle_invasions(config):
             continue
         
         end_time = dt.fromtimestamp(incident_expiration)
-        del_time = str((end_time-current_time).minutes)
+        del_time = str((end_time-current_time).seconds/60)
         print("Invasion at %s. Ends %s. Delete after %s"%(name, end_time.strftime('%H:%M'), del_time))
      
 
