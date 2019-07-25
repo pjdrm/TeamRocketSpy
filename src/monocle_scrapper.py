@@ -9,6 +9,7 @@ import datetime
 from datetime import datetime as dt, timedelta
 import sys
 import math
+import time
 
 def load_move_protos(move_protos_file):
     with open(move_protos_file) as data_file:
@@ -122,6 +123,7 @@ def populate_gym_name(fort_id, db_config):
     return found_name, gym_name
 
 def scrape_monocle_db(config):
+    print("Starting Raid Monocle Scrape")
     current_hour = int(dt.now().strftime("%H"))
     if current_hour < 9:
         return [] #dont want to report and trigger notifications too early, might annoy users
@@ -179,7 +181,7 @@ def scrape_monocle_quests(config):
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
-    print("Starting Monocle Scrape")
+    print("Starting Quest Monocle Scrape")
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
@@ -209,6 +211,31 @@ def scrape_monocle_quests(config):
     quest_list = sorted(quest_list, key=lambda k: k["reward"]) 
     return quest_list
             
+def scrape_monocle_invasions(config):
+    db_config = { "user": config["user"],
+                  "password": config["password"],
+                  "host": config["host"],
+                  "database": config["database"],
+                  "raise_on_warnings": True,
+                  "autocommit": True}
+    print("Starting Invasion Monocle Scrape")
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor(buffered=True)
+    
+    query = "SELECT name, incident_expiration FROM pokestops WHERE incident_start IS NOT null;"
+    cursor.execute(query)
+    
+    for (name, incident_expiration) in cursor:
+        if name == 'unown':
+            continue
+        
+        current_time = int(time.time())
+        if current_time > incident_expiration:
+            continue
+        
+        end_time_str = dt.fromtimestamp(incident_expiration).strftime('%H:%M')
+        print("Invasion at %s. Ends %s"%(name, end_time_str))
+     
 
 GYMS_INFO = "./config/gym_info.json"
 MOVE_DICT = load_move_protos("./config/proto_moves.json")
@@ -246,4 +273,4 @@ if __name__ == "__main__":
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
     
-    scrape_monocle_db(tr_spy_config)
+    scrape_monocle_invasions(tr_spy_config)
