@@ -226,7 +226,7 @@ def scrape_monocle_invasions(config):
     cursor.execute(query)
     
     for (name, incident_expiration) in cursor:
-        if name == 'unown':
+        if name == 'unknown':
             continue
         
         current_time = int(time.time())
