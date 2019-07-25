@@ -9,8 +9,6 @@ import json
 import unicodedata
 import time
 import asyncio
-import googlemaps
-import urllib.request
 from datetime import datetime as dt
 from fuzzywuzzy import process
 import sys
@@ -65,8 +63,8 @@ class UnownBot():
         self.issued_raids = {}
         self.active_raids = None
         self.active_invasions = []
-        self.api_key = self.tr_spy_config["maps_api_key"]
-        self.gmaps = googlemaps.Client(key=self.api_key)
+        self.invasion_channel = None
+        self.pokestops = json.load(open(self.tr_spy_config["pokestops"]))
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
         self.type_emojis = json.load(open("server-emojis.json"))
         self.move_type = json.load(open("pokemon-moves.json"))
@@ -119,6 +117,14 @@ class UnownBot():
         async for message in channel.history(limit=2000):
             ps_name = message.embeds[0]._author["name"]
             active_quests[ps_name] = True
+            #print("Quest load: %s" % ps_name)
+        return active_quests
+    
+    async def load_active_invasions(self):
+        active_quests = {}
+        async for message in self.invasion_channel.history(limit=2000):
+            ps_name = message.embeds[0]._author["name"].split(" at ")[1]
+            active_quests[ps_name] = None #TODO: get expiration date
             #print("Quest load: %s" % ps_name)
         return active_quests
     
@@ -214,6 +220,7 @@ class UnownBot():
             while True:
                 time_stamp = dt.now().strftime("%m-%d %H:%M")
                 print(time_stamp +" Starting Invasion Monocle scrape")
+                self.clean_active_invasions()
                 invasions = scrape_monocle_invasions(self.tr_spy_config)
                 for invasion in invasions:
                     if invasion["pokestop"] not in self.active_invasions:
@@ -463,17 +470,31 @@ class UnownBot():
         quest_cmd = '$quest '+quest_info["reward"]+' "'+quest_info["pokestop"]+'" "'+quest_info["goal"]+'"'
         channel = self.bot.get_channel(self.report_quests_channel_id)
         await channel.send(quest_cmd)
-        
+    
+    def clean_active_invasions(self):
+        current_time_int = int(time.time())
+        for stop_name in self.active_invasions:
+            incident_expiration = self.active_invasions[stop_name]
+            if current_time_int > incident_expiration:
+                self.active_invasions.pop(stop_name, None)
+    
     async def create_invasion(self, invasion_info):
-        coords = invasion_info["coords"] #TODO: build dynamic json with this info
-        address = self.gmaps.reverse_geocode(coords)[0]["formatted_address"]
-        str_split = address.split(", ")
-        if len(str_split) == 4:
-            address = ", ".join(str_split[1:])
-        address_url = "https://www.google.com/maps/search/?api=1&query="+str(coords[0])+"%2C"+str(coords[1])
-        pokestop_img_path = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(coords[0])+","+str(coords[1])+"&key="+self.api_key
-        outdir = ""
-        urllib.request.urlretrieve(pokestop_img_path, outdir+invasion_info["pokestop"]+".png")
+        stop_name = invasion_info["pokestop"]
+        if stop_name not in self.pokestops:
+            print("WARNING: no info for pokestop %s" % stop_name)
+            return
+        self.active_invasions[stop_name] = invasion_info["incident_expiration"]
+        address = self.pokestops[stop_name]["address"]
+        pokestop_img_path = self.pokestops[stop_name]["img_path"]
+        invasion_title = "Directions "+stop_name
+        title_url = self.pokestops[stop_name]["address_url"]
+        author_name = "Invasion at "+stop_name
+        nest_embed=discord.Embed(title=invasion_title, url=title_url, description=address, colour=SIDEBAR_EMBED_COLOR)
+        nest_embed.set_author(name=author_name)
+        mon_img = "https://raw.githubusercontent.com/cecpk/OSM-Rocketmap/f027d429291ab042cf6e5aa9965e5d009dc64ff1/static/images/pokestop/stop_i.png"
+        nest_embed.set_thumbnail(url=mon_img)
+        nest_embed.set_image(url=pokestop_img_path)
+        await self.invasion_channel.send(embed=nest_embed, delete_after=invasion_info["del_time"])
         
     def run_discord_bot(self):
         @self.bot.event
@@ -481,10 +502,12 @@ class UnownBot():
             print('UnownBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
+            self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
+            self.active_invasions = await self.load_active_invasions()
             self.bot.loop.create_task(self.check_scraped_raids())
             #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pogo_quests())
-            self.bot.loop.create_task(self.check_pogo_invasion())
+            #self.bot.loop.create_task(self.check_pogo_invasion())
             self.bot.loop.create_task(self.check_pokealarms())
             
         @self.bot.event
