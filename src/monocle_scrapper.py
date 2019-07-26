@@ -23,13 +23,13 @@ def load_move_protos(move_protos_file):
         
 def get_gym_name(gym_id, cnx):
     cursor = cnx.cursor(buffered=True)
-    query = "select name from gymdetails where gym_id="+str(gym_id)+";"
+    query = "select name from gymdetails where gym_id='"+str(gym_id)+"';"
     cursor.execute(query)
     return cursor.fetchone()[0]
 
 def get_team(gym_id, cnx):
     cursor = cnx.cursor(buffered=True)
-    query = "select team_id from gym where gym_id="+str(gym_id)+";"
+    query = "select team_id from gym where gym_id='"+str(gym_id)+"';"
     cursor.execute(query)
     team_id = cursor.fetchone()[0]
     if team_id == 1:
