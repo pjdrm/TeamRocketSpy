@@ -245,8 +245,6 @@ class UnownBot():
             async for message in chan.history(limit=2000):
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
-                    print("dt_now %s alarm_date %s delta: %s days %d secs %d"%(dt_now, alarm_date, delta, delta.days, delta.seconds))
-                    print((delta.days*24*60*60+delta.seconds)/60.0-60.0)
                     if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
                         await message.delete()
                         print("Deleted message")

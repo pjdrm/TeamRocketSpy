@@ -156,8 +156,8 @@ def scrape_monocle_db(config):
             found_gym, gym_name = populate_gym_name(fort_id, db_config)
             if not found_gym:
                 continue
-        raid_starts_in = datetime.datetime.fromtimestamp(start).strftime('%H:%M')
-        raid_ends_in = datetime.datetime.fromtimestamp(end).strftime('%H:%M')
+        raid_starts_in = start.strftime('%H:%M') #datetime.datetime.fromtimestamp(start).strftime('%H:%M')
+        raid_ends_in = end.strftime('%H:%M') #datetime.datetime.fromtimestamp(end).strftime('%H:%M')
         
         raid_dict = {'level': str(level), 
                      'boss': boss, 
