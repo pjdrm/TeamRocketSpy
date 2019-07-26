@@ -144,7 +144,6 @@ def scrape_monocle_db(config):
     
     for (fort_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
         start = start+timedelta(hours=1) #MAJOR HACK: fix this in MAD
-        print("spawn %s start %s end %s"%(spawn.strftime('%H:%M'), start.strftime('%H:%M'), end.strftime('%H:%M')))
         hatched = False
         boss = None
         if pokemon_id is not None:
@@ -165,7 +164,6 @@ def scrape_monocle_db(config):
                      'raid_starts_in': raid_starts_in,
                      'gym_name': gym_name,
                      'hatched': hatched}
-        print(raid_dict)
         if pokemon_id is not None:
             raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2], team]
         if is_present_raid(raid_dict):
