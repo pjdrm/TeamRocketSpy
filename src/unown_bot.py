@@ -13,7 +13,7 @@ from datetime import datetime as dt
 from fuzzywuzzy import process
 import sys
 from asyncio.tasks import sleep
-from monocle_scrapper import scrape_monocle_db, scrape_monocle_quests, scrape_monocle_invasions
+from monocle_scrapper import scrape_raids, scrape_quests, scrape_invasions
 from urllib.request import urlopen
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
@@ -198,7 +198,7 @@ class UnownBot():
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
             print(time_stamp +" Starting Raid Monocle scrape")
-            raid_list = scrape_monocle_db(self.tr_spy_config)
+            raid_list = scrape_raids(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
                 await self.create_raid(raid_info)
@@ -208,7 +208,7 @@ class UnownBot():
         while True:
             print("Quest scraping")
             active_quests = await self.load_active_quests()
-            quest_list = scrape_monocle_quests(self.tr_spy_config)
+            quest_list = scrape_quests(self.tr_spy_config)
             for quest in quest_list:
                 if not self.filter_quest(quest) and quest["pokestop"] not in active_quests:
                     await self.create_quest(quest)
@@ -221,7 +221,7 @@ class UnownBot():
                 time_stamp = dt.now().strftime("%m-%d %H:%M")
                 print(time_stamp +" Starting Invasion Monocle scrape")
                 self.clean_active_invasions()
-                invasions = scrape_monocle_invasions(self.tr_spy_config)
+                invasions = scrape_invasions(self.tr_spy_config)
                 for invasion in invasions:
                     if invasion["pokestop"] not in self.active_invasions:
                         await self.create_invasion(invasion)

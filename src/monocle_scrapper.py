@@ -10,6 +10,8 @@ from datetime import datetime as dt, timedelta
 import sys
 import math
 import time
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 def load_move_protos(move_protos_file):
     with open(move_protos_file) as data_file:
@@ -41,9 +43,13 @@ def get_team(gym_id, cnx):
     
 def get_pokestop_name(guid, cnx):
     cursor = cnx.cursor()
-    query = "select name from pokestop where pokestop_id='"+str(guid)+"';"
+    query = "select name, latitude, longitude from pokestop where pokestop_id='"+str(guid)+"';"
     cursor.execute(query)
-    return cursor.fetchone()[0].strip()
+    q_res = cursor.fetchone()
+    name = q_res[0].strip()
+    lat = q_res[1]
+    lon = q_res[2]
+    return name, lat, lon
 
 def is_present_raid(raid_info):
     raid_end_time = None
@@ -122,7 +128,14 @@ def populate_gym_name(fort_id, db_config):
     #    print("WARNING: could not find gym: %d" % fort_id)
     return found_name, gym_name
 
-def scrape_monocle_db(config):
+def inside_geofence(polygon, point):
+    lat = point[0]
+    lon = point[1]
+    point = Point(lat, lon) # create point
+    is_inside = point.within(polygon)
+    return is_inside
+
+def scrape_raids(config):
     current_hour = int(dt.now().strftime("%H"))
     if current_hour < 9:
         return [] #dont want to report and trigger notifications too early, might annoy users
@@ -172,13 +185,16 @@ def scrape_monocle_db(config):
     cnx.close()
     return raid_list
 
-def scrape_monocle_quests(config):
+def scrape_quests(config):
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
+    pts_geofence = config["geofence"]
+    polygon_geofence = Polygon(pts_geofence)
+    
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
@@ -199,16 +215,20 @@ def scrape_monocle_quests(config):
             reward = '"'+str(quest_stardust)+' Stardust"'
         else:
             reward = '"'+str(quest_item_amount)+" "+ITEMS_DICT[str(quest_item_id)]+'"'
-        pokestop = get_pokestop_name(GUID, cnx)
+            
+        pokestop, lat, lon = get_pokestop_name(GUID, cnx)
         if pokestop == "unknown":
             print("MAD has not picked up Pokestop name")
             continue
+        if not inside_geofence(polygon_geofence, [lat, lon]):
+            continue
+        
         quest_goal = quest_task
         quest_list.append({"pokestop": pokestop, "reward": reward, "goal": quest_goal})
     quest_list = sorted(quest_list, key=lambda k: k["reward"]) 
     return quest_list
             
-def scrape_monocle_invasions(config):
+def scrape_invasions(config):
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
@@ -272,4 +292,4 @@ if __name__ == "__main__":
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
     
-    scrape_monocle_invasions(tr_spy_config)
+    scrape_invasions(tr_spy_config)
