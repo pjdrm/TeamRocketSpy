@@ -21,15 +21,15 @@ def load_move_protos(move_protos_file):
         moves_dict_final[id] = move_name
     return moves_dict_final
         
-def get_gym_name(fort_id, cnx):
+def get_gym_name(gym_id, cnx):
     cursor = cnx.cursor(buffered=True)
-    query = "select name from forts where id="+str(fort_id)+";"
+    query = "select name from gymdetails where gym_id="+str(gym_id)+";"
     cursor.execute(query)
     return cursor.fetchone()[0]
 
-def get_team(fort_id, cnx):
+def get_team(gym_id, cnx):
     cursor = cnx.cursor(buffered=True)
-    query = "select team from fort_sightings where fort_id="+str(fort_id)+";"
+    query = "select team_id from gym where gym_id="+str(gym_id)+";"
     cursor.execute(query)
     team_id = cursor.fetchone()[0]
     if team_id == 1:
@@ -41,7 +41,7 @@ def get_team(fort_id, cnx):
     
 def get_pokestop_name(guid, cnx):
     cursor = cnx.cursor()
-    query = "select name from pokestops where external_id='"+str(guid)+"';"
+    query = "select name from pokestop where pokestop_id='"+str(guid)+"';"
     cursor.execute(query)
     return cursor.fetchone()[0].strip()
 
@@ -87,13 +87,13 @@ def is_present_raid(raid_info):
 def populate_gym_name(fort_id, db_config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
-    query = "SELECT lat, lon FROM forts where id = "+str(fort_id)
+    query = "SELECT latitude, longitude FROM gym where gym_id = "+str(fort_id)
     cursor.execute(query)
     lat_mitm = None
     lon_mitm = None
-    for (lat, lon) in cursor:
-        lat_mitm = lat
-        lon_mitm = lon
+    for (latitude, longitude) in cursor:
+        lat_mitm = latitude
+        lon_mitm = longitude
     
     with open(GYMS_INFO) as gyms_f:    
         gym_info = json.load(gyms_f)
@@ -112,7 +112,7 @@ def populate_gym_name(fort_id, db_config):
     found_name = False
     if gym_name is not None:
         found_name = True
-        query = 'UPDATE forts SET name="'+gym_name+'" WHERE id = '+str(fort_id)
+        query = 'UPDATE gymdetails SET name="'+gym_name+'" WHERE gym_id = '+str(fort_id)
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor(buffered=True)
         cursor.execute(query)
@@ -137,12 +137,12 @@ def scrape_monocle_db(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT fort_id, level, pokemon_id, time_battle, time_end, move_1, move_2 FROM raids"
+    query = "SELECT gym_id, level, pokemon_id, start, end, move_1, move_2 FROM raid"
     cursor.execute(query)
     
     raid_list = []
     
-    for (fort_id, level, pokemon_id, time_battle, time_end, move_1, move_2) in cursor:
+    for (fort_id, level, pokemon_id, start, end, move_1, move_2) in cursor:
         hatched = False
         boss = None
         if pokemon_id is not None:
@@ -156,8 +156,8 @@ def scrape_monocle_db(config):
             found_gym, gym_name = populate_gym_name(fort_id, db_config)
             if not found_gym:
                 continue
-        raid_starts_in = datetime.datetime.fromtimestamp(time_battle).strftime('%H:%M')
-        raid_ends_in = datetime.datetime.fromtimestamp(time_end).strftime('%H:%M')
+        raid_starts_in = datetime.datetime.fromtimestamp(start).strftime('%H:%M')
+        raid_ends_in = datetime.datetime.fromtimestamp(end).strftime('%H:%M')
         
         raid_dict = {'level': str(level), 
                      'boss': boss, 
@@ -219,7 +219,7 @@ def scrape_monocle_invasions(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT name, incident_expiration FROM pokestops WHERE incident_start IS NOT null;"
+    query = "SELECT name, incident_expiration FROM pokestop WHERE incident_start IS NOT null;"
     cursor.execute(query)
     current_time = dt.now()
     current_time_int = int(time.time())
