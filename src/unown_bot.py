@@ -247,7 +247,6 @@ class UnownBot():
                     delta = dt_now-alarm_date
                     if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
                         await message.delete()
-                        print("Deleted message")
         while True:
             dt_now = dt.now()
             time_stamp = dt_now.strftime("%m-%d %H:%M")
