@@ -143,6 +143,7 @@ def scrape_monocle_db(config):
     raid_list = []
     
     for (fort_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
+        start = start+timedelta(hours=1) #MAJOR HACK: fix this in MAD
         print("spawn %s start %s end %s"%(spawn.strftime('%H:%M'), start.strftime('%H:%M'), end.strftime('%H:%M')))
         hatched = False
         boss = None
@@ -158,7 +159,7 @@ def scrape_monocle_db(config):
             if not found_gym:
                 continue
             
-        raid_starts_in = end.strftime('%H:%M')
+        raid_starts_in = start.strftime('%H:%M')
         raid_dict = {'level': str(level), 
                      'boss': boss, 
                      'raid_starts_in': raid_starts_in,
