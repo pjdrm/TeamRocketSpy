@@ -441,7 +441,7 @@ class UnownBot():
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
                 time.sleep(10)
-                await gym_channel.send("!left "+raid_info["raid_ends_in"])
+                await gym_channel.send("!hatch " + raid_info["raid_starts_in"])
                 self.no_time_end_raids.pop(raid_channel_name)
             
         if is_active_raid and raid_info["hatched"]:

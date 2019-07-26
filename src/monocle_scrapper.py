@@ -137,12 +137,13 @@ def scrape_monocle_db(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT gym_id, level, pokemon_id, start, end, move_1, move_2 FROM raid"
+    query = "SELECT gym_id, level, pokemon_id, spawn, start, end, move_1, move_2 FROM raid"
     cursor.execute(query)
     
     raid_list = []
     
-    for (fort_id, level, pokemon_id, start, end, move_1, move_2) in cursor:
+    for (fort_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
+        print("spawn %s start %s end %s"%(spawn.strftime('%H:%M'), start.strftime('%H:%M'), end.strftime('%H:%M')))
         hatched = False
         boss = None
         if pokemon_id is not None:
@@ -156,15 +157,14 @@ def scrape_monocle_db(config):
             found_gym, gym_name = populate_gym_name(fort_id, db_config)
             if not found_gym:
                 continue
-        raid_starts_in = start.strftime('%H:%M') #datetime.datetime.fromtimestamp(start).strftime('%H:%M')
-        raid_ends_in = end.strftime('%H:%M') #datetime.datetime.fromtimestamp(end).strftime('%H:%M')
-        
+            
+        raid_starts_in = end.strftime('%H:%M')
         raid_dict = {'level': str(level), 
                      'boss': boss, 
                      'raid_starts_in': raid_starts_in,
-                     'raid_ends_in': raid_ends_in,
                      'gym_name': gym_name,
                      'hatched': hatched}
+        print(raid_dict)
         if pokemon_id is not None:
             raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2], team]
         if is_present_raid(raid_dict):
