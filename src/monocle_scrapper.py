@@ -244,7 +244,7 @@ def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, poke
     with open(pokestop_info_path, "w+") as f:
         f.write(json.dumps(pokestop_info, indent=1))
      
-def scrape_invasions(config):
+def scrape_invasions(config, pokestop_info):
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
@@ -254,8 +254,6 @@ def scrape_invasions(config):
     api_key = config["maps_api_key"]
     pokestops_img_dir = "./config/pokestop_img/"
     pokestop_info_path = config["pokestops"]
-    with open(pokestop_info_path) as data_file:    
-        pokestop_info = json.load(data_file)
     i = len(pokestop_info)
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
@@ -283,7 +281,7 @@ def scrape_invasions(config):
             continue
         
         del_time = (incident_expiration-current_time).seconds
-        print("Invasion at %s. Ends %s. Delete after %s"%(name, incident_expiration.strftime('%H:%M'), str(del_time/60)))
+        #print("Invasion at %s. Ends %s. Delete after %s"%(name, incident_expiration.strftime('%H:%M'), str(del_time/60)))
         invasions.append({"pokestop": name, "incident_expiration_int": incident_expiration_int, "incident_expiration": incident_expiration.strftime('%H:%M'), "del_time": del_time})
     return invasions
 
