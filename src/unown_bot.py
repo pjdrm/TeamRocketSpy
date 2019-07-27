@@ -481,7 +481,7 @@ class UnownBot():
         if stop_name not in self.pokestops:
             print("WARNING: no info for pokestop %s" % stop_name)
             return
-        self.active_invasions[stop_name] = int(invasion_info["incident_expiration"].strftime("%s"))
+        self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
         address = self.pokestops[stop_name]["address"]
         pokestop_img_path = self.pokestops[stop_name]["img_url"]
         invasion_title = "Directions "+stop_name
