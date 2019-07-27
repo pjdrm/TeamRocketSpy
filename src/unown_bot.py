@@ -125,7 +125,11 @@ class UnownBot():
         async for message in self.invasion_channel.history(limit=2000):
             if len(message.embeds) > 0:
                 ps_name = message.embeds[0]._author["name"].split(" at ")[1]
-                active_quests[ps_name] = None #TODO: get expiration date
+                inv_exp = message.embeds[0].description.split("at:** ")[1]
+                time_stamp_str = dt.now().strftime("%m-%d ")+inv_exp
+                time_stamp_bj = dt.strptime(time_stamp_str, '%Y-%m-%d %H:%M:%S.%f')
+                time_stamp_int = int(time_stamp_bj.strftime("%s"))
+                active_quests[ps_name] = time_stamp_int
                 print("Invasion load: %s" % ps_name)
         return active_quests
     
@@ -486,7 +490,7 @@ class UnownBot():
             print("WARNING: no info for pokestop %s" % stop_name)
             return
         self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
-        address = self.pokestops[stop_name]["address"]+"\nExpires at"+invasion_info["incident_expiration"]
+        address = self.pokestops[stop_name]["address"]+"\n**Expires at:** "+invasion_info["incident_expiration"]
         pokestop_img_path = self.pokestops[stop_name]["img_url"]
         invasion_title = "Directions "+stop_name
         title_url = self.pokestops[stop_name]["address_url"]
