@@ -481,7 +481,7 @@ class UnownBot():
         if stop_name not in self.pokestops:
             print("WARNING: no info for pokestop %s" % stop_name)
             return
-        self.active_invasions[stop_name] = invasion_info["incident_expiration"]
+        self.active_invasions[stop_name] = int(invasion_info["incident_expiration"].strftime("%s"))
         address = self.pokestops[stop_name]["address"]
         pokestop_img_path = self.pokestops[stop_name]["img_url"]
         invasion_title = "Directions "+stop_name
@@ -492,8 +492,7 @@ class UnownBot():
         mon_img = "https://raw.githubusercontent.com/cecpk/OSM-Rocketmap/f027d429291ab042cf6e5aa9965e5d009dc64ff1/static/images/pokestop/stop_i.png"
         invasion_embed.set_thumbnail(url=mon_img)
         invasion_embed.set_image(url=pokestop_img_path)
-        zwc = u'\u200b'
-        invasion_embed.add_field(name=zwc, value="Ends at "+invasion_info["incident_expiration"], inline=True)
+        invasion_embed.add_field(name="Invasion expires at:", value=invasion_info["incident_expiration"], inline=True)
         await self.invasion_channel.send(embed=invasion_embed, delete_after=invasion_info["del_time"])
         
     def run_discord_bot(self):
