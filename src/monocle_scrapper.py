@@ -253,7 +253,8 @@ def scrape_invasions(config):
                   "autocommit": True}
     pokestops_img_dir = "./config/pokestop_img/"
     pokestop_info_path = config["pokestops"]
-    pokestop_info = json.load(pokestop_info_path)
+    with open(pokestop_info_path) as data_file:    
+        pokestop_info = json.load(data_file)
     i = len(pokestop_info)
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
