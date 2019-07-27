@@ -283,7 +283,7 @@ def scrape_invasions(config):
         
         del_time = (incident_expiration-current_time).seconds
         print("Invasion at %s. Ends %s. Delete after %s"%(name, incident_expiration.strftime('%H:%M'), str(del_time/60)))
-        invasions.append({"pokestop": name, "incident_expiration": incident_expiration, "del_time": del_time})
+        invasions.append({"pokestop": name, "incident_expiration": incident_expiration.strftime('%H:%M'), "del_time": del_time})
     return invasions
 
 GYMS_INFO = "./config/gym_info.json"

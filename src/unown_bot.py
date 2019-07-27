@@ -486,12 +486,13 @@ class UnownBot():
         invasion_title = "Directions "+stop_name
         title_url = self.pokestops[stop_name]["address_url"]
         author_name = "Invasion at "+stop_name
-        nest_embed=discord.Embed(title=invasion_title, url=title_url, description=address, colour=SIDEBAR_EMBED_COLOR)
-        nest_embed.set_author(name=author_name)
+        invasion_embed=discord.Embed(title=invasion_title, url=title_url, description=address, colour=SIDEBAR_EMBED_COLOR)
+        invasion_embed.set_author(name=author_name)
         mon_img = "https://raw.githubusercontent.com/cecpk/OSM-Rocketmap/f027d429291ab042cf6e5aa9965e5d009dc64ff1/static/images/pokestop/stop_i.png"
-        nest_embed.set_thumbnail(url=mon_img)
-        nest_embed.set_image(url=pokestop_img_path)
-        await self.invasion_channel.send(embed=nest_embed, delete_after=invasion_info["del_time"])
+        invasion_embed.set_thumbnail(url=mon_img)
+        invasion_embed.set_image(url=pokestop_img_path)
+        invasion_embed.add_field(name="", value="Ends at "+invasion_info["incident_expiration"], inline=True)
+        await self.invasion_channel.send(embed=invasion_embed, delete_after=invasion_info["del_time"])
         
     def run_discord_bot(self):
         @self.bot.event
