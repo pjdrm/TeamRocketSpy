@@ -126,8 +126,8 @@ class UnownBot():
             if len(message.embeds) > 0:
                 ps_name = message.embeds[0]._author["name"].split(" at ")[1]
                 inv_exp = message.embeds[0].description.split("at:** ")[1]
-                time_stamp_str = dt.now().strftime("%m-%d ")+inv_exp
-                time_stamp_bj = dt.strptime(time_stamp_str, '%Y-%m-%d %H:%M:%S.%f')
+                time_stamp_str = dt.now().strftime("%Y-%m-%d ")+inv_exp
+                time_stamp_bj = dt.strptime(time_stamp_str, '%Y-%m-%d %H:%M')
                 time_stamp_int = int(time_stamp_bj.strftime("%s"))
                 active_quests[ps_name] = time_stamp_int
                 print("Invasion load: %s" % ps_name)
