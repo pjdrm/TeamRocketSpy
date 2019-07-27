@@ -499,12 +499,12 @@ class UnownBot():
             print('UnownBot Ready')
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
-            #self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
-            #self.active_invasions = await self.load_active_invasions()
+            self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
+            self.active_invasions = await self.load_active_invasions()
             self.bot.loop.create_task(self.check_scraped_raids())
             #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pogo_quests())
-            #self.bot.loop.create_task(self.check_pogo_invasion())
+            self.bot.loop.create_task(self.check_pogo_invasion())
             self.bot.loop.create_task(self.check_pokealarms())
             
         @self.bot.event
