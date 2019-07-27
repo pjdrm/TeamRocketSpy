@@ -492,7 +492,8 @@ class UnownBot():
         mon_img = "https://raw.githubusercontent.com/cecpk/OSM-Rocketmap/f027d429291ab042cf6e5aa9965e5d009dc64ff1/static/images/pokestop/stop_i.png"
         invasion_embed.set_thumbnail(url=mon_img)
         invasion_embed.set_image(url=pokestop_img_path)
-        invasion_embed.add_field(name="", value="Ends at "+invasion_info["incident_expiration"], inline=True)
+        zwc = u'\u200b'
+        invasion_embed.add_field(name=zwc, value="Ends at "+invasion_info["incident_expiration"], inline=True)
         await self.invasion_channel.send(embed=invasion_embed, delete_after=invasion_info["del_time"])
         
     def run_discord_bot(self):
