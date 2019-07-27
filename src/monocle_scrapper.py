@@ -157,7 +157,7 @@ def scrape_raids(config):
     
     raid_list = []
     
-    for (fort_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
+    for (gym_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
         start = start+timedelta(hours=1) #MAJOR HACK: fix this in MAD
         hatched = False
         boss = None
@@ -165,11 +165,11 @@ def scrape_raids(config):
             boss = POKE_INFO[str(pokemon_id)]["name"].replace("Alolan ", "")
             hatched = True
             
-        gym_name = get_gym_name(fort_id, cnx)
-        team = get_team(fort_id, cnx)
+        gym_name = get_gym_name(gym_id, cnx)
+        team = get_team(gym_id, cnx)
         if gym_name is None:
-            #print("WARNING: unknown for id: %d" % fort_id)
-            found_gym, gym_name = populate_gym_name(fort_id, db_config)
+            #print("WARNING: unknown for id: %d" % gym_id)
+            found_gym, gym_name = populate_gym_name(gym_id, db_config)
             if not found_gym:
                 continue
             
@@ -267,7 +267,7 @@ def scrape_invasions(config):
         if name == 'unknown':
             continue
         
-        if current_time_int > incident_expiration:
+        if current_time_int > int(incident_expiration.strftime("%s")):
             continue
         
         if name not in pokestop_info:
@@ -277,9 +277,8 @@ def scrape_invasions(config):
             i += 1
             continue
         
-        end_time = dt.fromtimestamp(incident_expiration)
-        del_time = (end_time-current_time).seconds
-        print("Invasion at %s. Ends %s. Delete after %s"%(name, end_time.strftime('%H:%M'), str(del_time/60)))
+        del_time = (incident_expiration-current_time).seconds
+        print("Invasion at %s. Ends %s. Delete after %s"%(name, incident_expiration.strftime('%H:%M'), str(del_time/60)))
         invasions.append({"pokestop": name, "incident_expiration": incident_expiration, "del_time": del_time})
     return invasions
 
