@@ -471,10 +471,14 @@ class UnownBot():
     
     def clean_active_invasions(self):
         current_time_int = int(time.time())
+        pop_stops = []
         for stop_name in self.active_invasions:
             incident_expiration = self.active_invasions[stop_name]
             if current_time_int > incident_expiration:
-                self.active_invasions.pop(stop_name, None)
+                pop_stops.append(stop_name)
+                
+        for stop_name in pop_stops:
+            self.active_invasions.pop(stop_name, None)
     
     async def create_invasion(self, invasion_info):
         stop_name = invasion_info["pokestop"]
