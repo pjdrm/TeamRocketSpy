@@ -231,8 +231,8 @@ def scrape_quests(config):
     return quest_list
 
 def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, pokestop_info_path):
-    img_url = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(lat)+","+str(lon)+"&key="+api_key
-    urllib.request.urlretrieve(img_url, img_path)
+    img_google_api_url = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(lat)+","+str(lon)+"&key="+api_key
+    urllib.request.urlretrieve(img_google_api_url, img_path)
     
     gmaps = googlemaps.Client(key=api_key)
     address = gmaps.reverse_geocode([lat, lon])[0]["formatted_address"]
@@ -251,6 +251,7 @@ def scrape_invasions(config):
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
+    api_key = config["maps_api_key"]
     pokestops_img_dir = "./config/pokestop_img/"
     pokestop_info_path = config["pokestops"]
     with open(pokestop_info_path) as data_file:    
@@ -265,6 +266,7 @@ def scrape_invasions(config):
     current_time_int = int(time.time())
     invasions = []
     for (name, incident_expiration, latitude, longitude) in cursor:
+        incident_expiration = incident_expiration+timedelta(hours=1)
         if name == 'unknown':
             continue
         
@@ -272,9 +274,10 @@ def scrape_invasions(config):
             continue
         
         if name not in pokestop_info:
+            print("Adding pokestop info %s" % name)
             img_path = pokestops_img_dir+"/"+str(i)+".png"
             img_url = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokestop_img/"+str(i)+".png"
-            add_pokestop(pokestop_info, name, latitude, latitude, longitude, img_path, img_url, pokestop_info_path)
+            add_pokestop(pokestop_info, name, latitude, longitude, api_key, img_path, img_url, pokestop_info_path)
             i += 1
             continue
         
