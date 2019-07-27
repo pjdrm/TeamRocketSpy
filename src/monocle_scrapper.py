@@ -12,6 +12,8 @@ import math
 import time
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+import urllib.request
+import googlemaps
 
 def load_move_protos(move_protos_file):
     with open(move_protos_file) as data_file:
@@ -227,7 +229,21 @@ def scrape_quests(config):
         quest_list.append({"pokestop": pokestop, "reward": reward, "goal": quest_goal})
     quest_list = sorted(quest_list, key=lambda k: k["reward"]) 
     return quest_list
-            
+
+def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, pokestop_info_path):
+    img_url = "https://maps.googleapis.com/maps/api/staticmap?size=500x250&markers=color:red%7Clabel:%7C"+str(lat)+","+str(lon)+"&key="+api_key
+    urllib.request.urlretrieve(img_url, img_path)
+    
+    gmaps = googlemaps.Client(key=api_key)
+    address = gmaps.reverse_geocode([lat, lon])[0]["formatted_address"]
+    str_split = address.split(", ")
+    if len(str_split) == 4:
+        address = ", ".join(str_split[1:])
+    address_url = "https://www.google.com/maps/search/?api=1&query="+str(lat)+"%2C"+str(lon)
+    pokestop_info[name] = {"address": address, "img_url": img_url, "address_url": address_url}
+    with open(pokestop_info_path, "w+") as f:
+        f.write(json.dumps(pokestop_info, indent=1))
+     
 def scrape_invasions(config):
     db_config = { "user": config["user"],
                   "password": config["password"],
@@ -235,19 +251,30 @@ def scrape_invasions(config):
                   "database": config["database"],
                   "raise_on_warnings": True,
                   "autocommit": True}
+    pokestops_img_dir = "./config/pokestop_img/"
+    pokestop_info_path = config["pokestops"]
+    pokestop_info = json.load(pokestop_info_path)
+    i = len(pokestop_info)
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT name, incident_expiration FROM pokestop WHERE incident_start IS NOT null;"
+    query = "SELECT name, incident_expiration, latitude, longitude FROM pokestop WHERE incident_start IS NOT null;"
     cursor.execute(query)
     current_time = dt.now()
     current_time_int = int(time.time())
     invasions = []
-    for (name, incident_expiration) in cursor:
+    for (name, incident_expiration, latitude, longitude) in cursor:
         if name == 'unknown':
             continue
         
         if current_time_int > incident_expiration:
+            continue
+        
+        if name not in pokestop_info:
+            img_path = pokestops_img_dir+"/"+str(i)+".png"
+            img_url = "https://raw.githubusercontent.com/pjdrm/TeamRocketSpy/master/config/pokestop_img/"+str(i)+".png"
+            add_pokestop(pokestop_info, name, latitude, latitude, longitude, img_path, img_url, pokestop_info_path)
+            i += 1
             continue
         
         end_time = dt.fromtimestamp(incident_expiration)

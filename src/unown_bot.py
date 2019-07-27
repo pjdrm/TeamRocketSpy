@@ -482,7 +482,7 @@ class UnownBot():
             return
         self.active_invasions[stop_name] = invasion_info["incident_expiration"]
         address = self.pokestops[stop_name]["address"]
-        pokestop_img_path = self.pokestops[stop_name]["img_path"]
+        pokestop_img_path = self.pokestops[stop_name]["img_url"]
         invasion_title = "Directions "+stop_name
         title_url = self.pokestops[stop_name]["address_url"]
         author_name = "Invasion at "+stop_name
