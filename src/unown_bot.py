@@ -123,9 +123,10 @@ class UnownBot():
     async def load_active_invasions(self):
         active_quests = {}
         async for message in self.invasion_channel.history(limit=2000):
-            ps_name = message.embeds[0]._author["name"].split(" at ")[1]
-            active_quests[ps_name] = None #TODO: get expiration date
-            #print("Quest load: %s" % ps_name)
+            if len(message.embeds) > 0:
+                ps_name = message.embeds[0]._author["name"].split(" at ")[1]
+                active_quests[ps_name] = None #TODO: get expiration date
+                print("Invasion load: %s" % ps_name)
         return active_quests
     
     def load_gyms(self, gyms_file, region_map):
