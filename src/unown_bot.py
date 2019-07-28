@@ -62,7 +62,7 @@ class UnownBot():
         self.no_time_end_raids = []
         self.issued_raids = {}
         self.active_raids = None
-        self.active_invasions = []
+        self.active_invasions = {}
         self.invasion_channel = None
         self.pokestops = json.load(open(self.tr_spy_config["pokestops"]))
         self.gyms_meta_data = json.load(open("gyms-metadata.json"))
