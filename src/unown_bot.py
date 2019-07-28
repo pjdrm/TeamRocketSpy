@@ -120,18 +120,10 @@ class UnownBot():
             #print("Quest load: %s" % ps_name)
         return active_quests
     
-    async def load_active_invasions(self):
-        active_quests = {}
+    async def del_reported_invasions(self):
         async for message in self.invasion_channel.history(limit=2000):
             if len(message.embeds) > 0:
-                ps_name = message.embeds[0]._author["name"].split(" at ")[1]
-                inv_exp = message.embeds[0].description.split("at:** ")[1]
-                time_stamp_str = dt.now().strftime("%Y-%m-%d ")+inv_exp
-                time_stamp_bj = dt.strptime(time_stamp_str, '%Y-%m-%d %H:%M')
-                time_stamp_int = int(time_stamp_bj.strftime("%s"))
-                active_quests[ps_name] = time_stamp_int
-                print("Invasion load: %s" % ps_name)
-        return active_quests
+                await message.delete()
     
     def load_gyms(self, gyms_file, region_map):
         gyms_json = json.load(open(gyms_file))
@@ -514,7 +506,7 @@ class UnownBot():
             self.bot.loop.create_task(self.check_pokealarms())
             if self.tr_spy_config["invasion_channel_id"] > 0:
                 self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
-                self.active_invasions = await self.load_active_invasions()
+                await self.del_reported_invasions()
                 self.bot.loop.create_task(self.check_pogo_invasion())
             
         @self.bot.event
