@@ -245,6 +245,10 @@ def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, poke
         f.write(json.dumps(pokestop_info, indent=1))
      
 def scrape_invasions(config, pokestop_info):
+    current_hour = int(dt.now().strftime("%H"))
+    if current_hour < 9 or current_hour >= 21 :
+        return [] #dont want to report invasions while scanning nests
+    
     db_config = { "user": config["user"],
                   "password": config["password"],
                   "host": config["host"],
