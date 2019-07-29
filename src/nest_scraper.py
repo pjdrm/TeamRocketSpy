@@ -145,24 +145,23 @@ def get_spawns(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT id, pokemon_id, lat, lon, updated FROM sightings"
+    query = "SELECT encounter_id, pokemon_id, latitude, longitude, disappear_time FROM pokemon"
     cursor.execute(query)
     
     spawns = []
     to_del_spawns = []
     migration_timestamp = get_migration_timestamp()
     print(migration_timestamp.strftime('Last migration was on %d, %b %Y'))
-    for (id, pokemon_id, lat, lon, updated) in cursor:
-        spawn_timestamp = datetime.datetime.fromtimestamp(updated)
-        if spawn_timestamp < migration_timestamp:
-            to_del_spawns.append(id)
+    for (encounter_id, pokemon_id, lat, lon, disappear_time) in cursor:
+        if disappear_time < migration_timestamp:
+            to_del_spawns.append(encounter_id)
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
         
     n_dels = len(to_del_spawns)
     for i, id in enumerate(to_del_spawns):
         print("Deleting spawn %d/%d"%(i, n_dels))
-        del_spawns_query = "DELETE FROM sightings WHERE id = "+str(id)+";"
+        del_spawns_query = "DELETE FROM pokemon WHERE encounter_id = "+str(encounter_id)+";"
         cursor = cnx.cursor(buffered=True)
         cursor.execute(del_spawns_query)
     return spawns
