@@ -135,7 +135,7 @@ class UnownBot():
     
     async def del_reported_invasions(self):
         async for message in self.invasion_channel.history(limit=2000):
-            if len(message.embeds) > 0:
+            if message.author.id == self.bot.user.id:
                 await message.delete()
     
     def load_gyms(self, gyms_file, region_map):
