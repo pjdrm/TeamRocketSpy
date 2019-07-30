@@ -483,7 +483,7 @@ class UnownBot():
             print("WARNING: no info for pokestop %s" % stop_name)
             return
         self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
-        info_string = "**Address:** "+self.pokestops[stop_name]["info_string"]+\
+        info_string = "**Address:** "+self.pokestops[stop_name]["address"]+\
                   "\n**Expires at:** "+invasion_info["incident_expiration"]+\
                   "\n**Grunt type:** "+grunt_type
         if grunt_type != "Random":
