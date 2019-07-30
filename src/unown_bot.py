@@ -488,7 +488,7 @@ class UnownBot():
                 
         for stop_name in pop_stops:
             self.active_invasions.pop(stop_name, None)
-    loa
+
     async def create_invasion(self, invasion_info):
         stop_name = invasion_info["pokestop"]
         if stop_name not in self.pokestops:
