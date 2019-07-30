@@ -120,6 +120,19 @@ class UnownBot():
             #print("Quest load: %s" % ps_name)
         return active_quests
     
+    def load_invasion_roles(self):
+        invasion_roles = {}
+        guild_id = self.bot.guilds[0].id #HACK: assumes bot is only in one server
+        roles = self.bot.get_guild(guild_id).roles
+        for type in self.type_emojis:
+            type_low = type.lower()
+            for role in roles:
+                role_name = role.name.lower()
+                if type_low in role_name:
+                    invasion_roles[type_low] = "<@&"+str(role.id)+">"
+                    break
+        return invasion_roles
+    
     async def del_reported_invasions(self):
         async for message in self.invasion_channel.history(limit=2000):
             if len(message.embeds) > 0:
@@ -478,10 +491,14 @@ class UnownBot():
     
     async def create_invasion(self, invasion_info):
         stop_name = invasion_info["pokestop"]
-        grunt_type = invasion_info["grunt_type"]
         if stop_name not in self.pokestops:
             print("WARNING: no info for pokestop %s" % stop_name)
             return
+        
+        grunt_type = invasion_info["grunt_type"]
+        if grunt_type in self.invasion_roles:
+            await self.invasion_channel.send("Found "+self.invasion_roles[grunt_type]+"!")
+            
         self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
         info_string = "**Address:** "+self.pokestops[stop_name]["address"]+\
                   "\n**Expires at:** "+invasion_info["incident_expiration"]+\
@@ -511,6 +528,7 @@ class UnownBot():
             self.bot.loop.create_task(self.check_pokealarms())
             if self.tr_spy_config["invasion_channel_id"] > 0:
                 self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
+                self.invasion_roles = self.load_invasion_roles()
                 await self.del_reported_invasions()
                 self.bot.loop.create_task(self.check_pogo_invasion())
             
