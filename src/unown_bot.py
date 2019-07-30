@@ -128,8 +128,8 @@ class UnownBot():
             type_low = type.lower()
             for role in roles:
                 role_name = role.name.lower()
-                if type_low in role_name:
-                    invasion_roles[type_low] = "<@&"+str(role.id)+">"
+                if role_name.startswith("invasion") and type_low in role_name:
+                    invasion_roles[type] = "<@&"+str(role.id)+">"
                     break
         return invasion_roles
     
@@ -488,7 +488,7 @@ class UnownBot():
                 
         for stop_name in pop_stops:
             self.active_invasions.pop(stop_name, None)
-    
+    loa
     async def create_invasion(self, invasion_info):
         stop_name = invasion_info["pokestop"]
         if stop_name not in self.pokestops:
