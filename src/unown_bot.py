@@ -478,16 +478,21 @@ class UnownBot():
     
     async def create_invasion(self, invasion_info):
         stop_name = invasion_info["pokestop"]
+        grunt_type = invasion_info["grunt_type"]
         if stop_name not in self.pokestops:
             print("WARNING: no info for pokestop %s" % stop_name)
             return
         self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
-        address = self.pokestops[stop_name]["address"]+"\n**Expires at:** "+invasion_info["incident_expiration"]
+        info_string = "**Address:** "+self.pokestops[stop_name]["info_string"]+\
+                  "\n**Expires at:** "+invasion_info["incident_expiration"]+\
+                  "\n**Grunt type:** "+grunt_type
+        if grunt_type != "Random":
+            info_string += " "+self.type_emojis[grunt_type]
         pokestop_img_path = self.pokestops[stop_name]["img_url"]
-        invasion_title = "Directions "+stop_name
+        invasion_title = "Google maps directions link"
         title_url = self.pokestops[stop_name]["address_url"]
         author_name = "Invasion at "+stop_name
-        invasion_embed=discord.Embed(title=invasion_title, url=title_url, description=address, colour=SIDEBAR_EMBED_COLOR)
+        invasion_embed=discord.Embed(title=invasion_title, url=title_url, description=info_string, colour=SIDEBAR_EMBED_COLOR)
         invasion_embed.set_author(name=author_name)
         mon_img = "https://raw.githubusercontent.com/cecpk/OSM-Rocketmap/f027d429291ab042cf6e5aa9965e5d009dc64ff1/static/images/pokestop/stop_i.png"
         invasion_embed.set_thumbnail(url=mon_img)

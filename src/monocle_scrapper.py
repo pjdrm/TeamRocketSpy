@@ -262,12 +262,12 @@ def scrape_invasions(config, pokestop_info):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT name, incident_expiration, latitude, longitude FROM pokestop WHERE incident_start IS NOT null;"
+    query = "SELECT name, incident_expiration, latitude, longitude, incident_grunt_type FROM pokestop WHERE incident_start IS NOT null;"
     cursor.execute(query)
     current_time = dt.now()
     current_time_int = int(time.time())
     invasions = []
-    for (name, incident_expiration, latitude, longitude) in cursor:
+    for (name, incident_expiration, latitude, longitude, incident_grunt_type) in cursor:
         incident_expiration = incident_expiration+timedelta(hours=1)
         if name == 'unknown':
             continue
@@ -286,7 +286,11 @@ def scrape_invasions(config, pokestop_info):
         
         del_time = (incident_expiration-current_time).seconds
         #print("Invasion at %s. Ends %s. Delete after %s"%(name, incident_expiration.strftime('%H:%M'), str(del_time/60)))
-        invasions.append({"pokestop": name, "incident_expiration_int": incident_expiration_int, "incident_expiration": incident_expiration.strftime('%H:%M'), "del_time": del_time})
+        invasions.append({"pokestop": name,
+                          "incident_expiration_int": incident_expiration_int,
+                          "incident_expiration": incident_expiration.strftime('%H:%M'),
+                          "del_time": del_time,
+                          "grunt_type": GRUNT_TYPE_DICT[incident_grunt_type]})
     return invasions
 
 GYMS_INFO = "./config/gym_info.json"
@@ -312,6 +316,25 @@ TYPE_DICT = {1: "Normal",
             16: "Dragon",
             17: "Dark",
             18: "Fairy"}
+
+GRUNT_TYPE_DICT = {5: 'Random',
+                    7: 'Bug',
+                    9: 'Ghost',
+                    11: 'Dark',
+                    13: 'Dragon',
+                    15: 'Fairy',
+                    17: 'Fighting',
+                    19: 'Fire',
+                    21: 'Flying',
+                    23: 'Grass',
+                    25: 'Ground',
+                    27: 'Ice',
+                    29: 'Metal',
+                    31: 'Normal',
+                    33: 'Poison',
+                    35: 'Psychic',
+                    37: 'Rock',
+                    39: 'Water'}
         
 with open("./config/proto_items.json") as data_file:    
     ITEMS_DICT = json.load(data_file)
