@@ -497,7 +497,7 @@ class UnownBot():
         
         grunt_type = invasion_info["grunt_type"]
         if grunt_type in self.invasion_roles:
-            await self.invasion_channel.send("Found "+self.invasion_roles[grunt_type]+"!")
+            await self.invasion_channel.send("Found "+self.invasion_roles[grunt_type]+"!", delete_after=invasion_info["del_time"])
             
         self.active_invasions[stop_name] = invasion_info["incident_expiration_int"]
         info_string = "**Address:** "+self.pokestops[stop_name]["address"]+\
