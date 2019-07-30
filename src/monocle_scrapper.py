@@ -238,7 +238,7 @@ def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, poke
     address = gmaps.reverse_geocode([lat, lon])[0]["formatted_address"]
     str_split = address.split(", ")
     if len(str_split) == 4:
-        address = ", ".join(str_split[1:])
+        address = str_split[0]
     address_url = "https://www.google.com/maps/search/?api=1&query="+str(lat)+"%2C"+str(lon)
     pokestop_info[name] = {"address": address, "img_url": img_url, "address_url": address_url}
     with open(pokestop_info_path, "w+") as f:
