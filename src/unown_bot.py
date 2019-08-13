@@ -15,6 +15,8 @@ import sys
 from asyncio.tasks import sleep
 from db_scrapper import scrape_raids, scrape_quests, scrape_invasions
 from urllib.request import urlopen
+import mysql.connector
+from shapely.vectorized._vectorized import result
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
@@ -22,6 +24,7 @@ MAP_EMOJI = '🗺'
 WARNING_EMOJI = '⚠'
 SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
+UNOWN_POKESTOP_ICON = "https://static.pokenavbot.com/imgs/teams/team-unknown-logo-256px.png"
 
 WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa e explicar-te a organização do servidor. O servidor está organizado por regiões de forma a poderes filtrar raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
   `!iam alameda`\
@@ -224,6 +227,7 @@ class UnownBot():
                     await self.create_quest(quest)
                 #else:
                 #    print("Discarding quest: %s" % quest)
+            await self.add_new_pokestops()
             await asyncio.sleep(1800) #30m
             
     async def check_pogo_invasion(self):
@@ -249,7 +253,40 @@ class UnownBot():
                 self.pogo_events_embed = embed
                 print(pogo_events)
                 await asyncio.sleep(43200) #12h
-                
+    
+    async def add_new_pokestops(self):
+        chan = self.bot.get_channel(self.active_quests_channel_id)
+        async for message in chan.history(limit=2000):
+                if message.embeds[0].author.icon_url == UNOWN_POKESTOP_ICON:
+                    pokestop_name = message.embeds[0].author.name
+                    db_config = { "user": self.tr_spy_config["user"],
+                                  "password": self.tr_spy_config["password"],
+                                  "host": self.tr_spy_config["host"],
+                                  "database": self.tr_spy_config["database"],
+                                  "raise_on_warnings": True,
+                                  "autocommit": True}
+                    cnx = mysql.connector.connect(**db_config)
+                    cursor = cnx.cursor()
+                    query = "select latitude, longitude from pokestop where name='"+pokestop_name.replace("'", '"')+"';"#To match the DB
+                    cursor.execute(query)
+                    results = cursor.fetchall()
+                    if len(results) > 1:
+                        continue #TODO: deal with different stops with the same name
+                    lat, lon = results[0]
+                    add_poi_cmd = '$create poi pokestop "'+pokestop_name+'" '+str(lat)+' '+str(lon)
+                    file_change = False
+                    with open('new_pokestops.txt', 'w+') as f:
+                        new_stops = f.readlines()
+                        if add_poi_cmd not in new_stops:
+                            new_stops.append(add_poi_cmd)
+                            file_change = True
+                    if file_change:
+                        with open('new_pokestops.txt', 'w') as f:
+                            if len(new_stops) == 1:
+                                f.write(new_stops[0])
+                            else:
+                                f.write('\n'.join(new_stops))
+                    
     async def check_pokealarms(self):
         async def del_old_spawns(chan, dt_now):
             async for message in chan.history(limit=2000):
@@ -523,8 +560,8 @@ class UnownBot():
             self.regional_channel_dict = self.load_regional_channels(self.regions)
             self.active_raids = self.load_existing_raids()
             self.bot.loop.create_task(self.check_scraped_raids())
-            #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pogo_quests())
+            #self.bot.loop.create_task(self.check_pogo_events()) #TODO: currently broken
             self.bot.loop.create_task(self.check_pokealarms())
             if self.tr_spy_config["invasion_channel_id"] > 0:
                 self.invasion_channel = self.bot.get_channel(self.tr_spy_config["invasion_channel_id"])
