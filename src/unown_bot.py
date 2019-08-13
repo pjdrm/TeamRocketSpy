@@ -13,7 +13,7 @@ from datetime import datetime as dt
 from fuzzywuzzy import process
 import sys
 from asyncio.tasks import sleep
-from monocle_scrapper import scrape_raids, scrape_quests, scrape_invasions
+from db_scrapper import scrape_raids, scrape_quests, scrape_invasions
 from urllib.request import urlopen
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
@@ -207,7 +207,7 @@ class UnownBot():
     async def check_scraped_raids(self):
         while True:
             time_stamp = dt.now().strftime("%m-%d %H:%M")
-            print(time_stamp +" Starting Raid Monocle scrape")
+            print(time_stamp +" Starting DB raid scrape")
             raid_list = scrape_raids(self.tr_spy_config)
             raid_list = self.filter_tiers(raid_list)
             for raid_info in raid_list:
@@ -229,7 +229,7 @@ class UnownBot():
     async def check_pogo_invasion(self):
             while True:
                 time_stamp = dt.now().strftime("%m-%d %H:%M")
-                print(time_stamp +" Starting Invasion Monocle scrape")
+                print(time_stamp +" Starting DB Invasion scrape")
                 self.clean_active_invasions()
                 invasions = scrape_invasions(self.tr_spy_config, self.pokestops)
                 for invasion in invasions:
