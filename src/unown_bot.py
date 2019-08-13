@@ -77,7 +77,7 @@ class UnownBot():
         self.move_type = json.load(open("pokemon-moves.json"))
         self.regions, self.region_map = self.load_region_map("region-map.json")
         self.gyms = self.load_gyms("gyms.json", self.region_map)
-        self.bot_token = tr_spy_config["bot_token"]
+        self.bot_token = self.tr_spy_config["bot_token"]
         self.bot = commands.Bot(command_prefix="$", description='UnownBot')
         self.bot.remove_command("help")
         self.raid_messages = {}
@@ -91,7 +91,7 @@ class UnownBot():
         for poke in pokemon_list:
             if "name" in poke and "tier" in poke:
                 raid_bosses.append(poke["name"].replace("_alola", ""))
-        with open(tr_spy_config["raidmons_path"], "w+") as f:
+        with open(self.tr_spy_config["raidmons_path"], "w+") as f:
             f.write(str(raid_bosses))
         
     def is_raid_channel(self, channel_name):
