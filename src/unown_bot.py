@@ -16,7 +16,6 @@ from asyncio.tasks import sleep
 from db_scrapper import scrape_raids, scrape_quests, scrape_invasions
 from urllib.request import urlopen
 import mysql.connector
-from shapely.vectorized._vectorized import result
 
 GYM_TRANSLATION = {"Fountain (perto av Roma - Entrecampos)": "Fountain (EntreCampos)"}
 MOVES_EMOJI = '🏹'
