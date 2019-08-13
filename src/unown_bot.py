@@ -47,8 +47,10 @@ class UnownBot():
         if fetch_raidmons:
             print("Updating list of raid bosses")
             self.fetch_raid_bosses()
-        with open(tr_spy_config["raidmons_path"]) as f:
+            
+        with open(self.tr_spy_config["raidmons_path"]) as f:
             self.raid_bosses = eval(f.readline())
+            
         self.tr_spy_config_path= tr_spy_config_path
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
