@@ -38,15 +38,18 @@ WELCOME2 = "Caso queiras ver todas as regiões podes escrever o comando `!iam al
 
 class UnownBot():
     
-    def __init__(self, tr_spy_config,
+    def __init__(self, tr_spy_config_path,
                        fetch_raidmons=False,
                        log_file="./raid_reporter_log.txt"):
+        with open(tr_spy_config_path) as data_file:    
+            self.tr_spy_config = json.load(data_file)
+        
         if fetch_raidmons:
             print("Updating list of raid bosses")
             self.fetch_raid_bosses()
         with open(tr_spy_config["raidmons_path"]) as f:
             self.raid_bosses = eval(f.readline())
-        self.tr_spy_config= tr_spy_config
+        self.tr_spy_config_path= tr_spy_config_path
         self.blocked_tiers = self.tr_spy_config["blocked_tiers"]
         self.allowed_pokemon = self.tr_spy_config["allowed_pokemon"]
         self.auto_hatch_flag = self.tr_spy_config["auto_hatch_flag"]
@@ -273,18 +276,8 @@ class UnownBot():
                         continue #TODO: deal with different stops with the same name
                     lat, lon = results[0]
                     add_poi_cmd = '$create poi pokestop "'+pokestop_name+'" '+str(lat)+' '+str(lon)
-                    file_change = False
-                    with open('new_pokestops.txt', 'w+') as f:
-                        new_stops = f.readlines()
-                        if add_poi_cmd not in new_stops:
-                            new_stops.append(add_poi_cmd)
-                            file_change = True
-                    if file_change:
-                        with open('new_pokestops.txt', 'w') as f:
-                            if len(new_stops) == 1:
-                                f.write(new_stops[0])
-                            else:
-                                f.write('\n'.join(new_stops))
+                    with open('new_pokestops_'+self.tr_spy_config_path, 'a+') as f:
+                        f.write(add_poi_cmd+"\n")
                     
     async def check_pokealarms(self):
         async def del_old_spawns(chan, dt_now):
@@ -646,7 +639,4 @@ if __name__ == "__main__":
         tr_spy_config_path = sys.argv[1]
         fetch_raidmons = False
         
-    with open(tr_spy_config_path) as data_file:    
-        tr_spy_config = json.load(data_file)
-    
-    raid_bot = UnownBot(tr_spy_config, fetch_raidmons=fetch_raidmons)
+    raid_bot = UnownBot(tr_spy_config_path, fetch_raidmons=fetch_raidmons)

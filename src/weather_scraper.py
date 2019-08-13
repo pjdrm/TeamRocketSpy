@@ -27,10 +27,10 @@ class WeatherBot():
             self.tr_config = json.load(data_file)
         self.scrape_accu = self.tr_config["scrape_accu"]
         self.scrape_mad = self.tr_config["scrape_mad"]
-        self.s2_cells_loc_keys = ['273981', '273947']
+        self.s2_cells_loc_keys = ['273978', '273947'] #['325664', '328224']
         self.s2_cells_db_ids = [943841672003846144, 943839472980590592]
         self.accu_weather_url = []
-        self.base_url = 'https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/'
+        self.base_url = "https://www.accuweather.com/en/pt/lisbon/274087/hourly-weather-forecast/"#'https://www.accuweather.com/en/uk/glasgow/328226/hourly-weather-forecast/'
         for s2c in self.s2_cells_loc_keys:
             self.accu_weather_url.append(self.base_url+s2c)
         self.log_file = log_file
@@ -144,7 +144,7 @@ class WeatherBot():
         return weather_forecast
             
     def scrape_weather(self):
-        threading.Timer(3500, self.scrape_weather).start()
+        #threading.Timer(3500, self.scrape_weather).start()
         current_time_stamp = dt.now()
         current_hour = int(current_time_stamp.strftime('%H'))
         current_time_stamp = current_time_stamp.strftime('%d-%m-%y %H:%M')
@@ -163,7 +163,7 @@ class WeatherBot():
                     s2cel_id = accu_s2cell_url.split('/')[-1]
                     log_f.write("Time stamp: %s s2cell: %s Forecast: %s\n" % (current_time_stamp, s2cel_id, str(self.weather_forecast)))
             print("Accu weather scraped at %s" % (current_time_stamp))
-            #driver.close()
+            self.driver.close()
         
         
     def get_debug_weather_reports(self, h):
