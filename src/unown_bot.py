@@ -278,7 +278,7 @@ class UnownBot():
                         continue #TODO: deal with different stops with the same name
                     lat, lon = results[0]
                     add_poi_cmd = '$create poi pokestop "'+pokestop_name+'" '+str(lat)+' '+str(lon)
-                    with open('new_pokestops_'+self.tr_spy_config_path, 'a+') as f:
+                    with open('new_pokestops_'+self.tr_spy_config_path.split("/")[-1], 'a') as f:
                         f.write(add_poi_cmd+"\n")
                     
     async def check_pokealarms(self):
