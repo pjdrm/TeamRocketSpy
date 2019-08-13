@@ -48,7 +48,7 @@ def get_pokestop_name(guid, cnx):
     query = "select name, latitude, longitude from pokestop where pokestop_id='"+str(guid)+"';"
     cursor.execute(query)
     q_res = cursor.fetchone()
-    name = q_res[0].strip()
+    name = q_res[0].strip().replace('"', '')
     lat = q_res[1]
     lon = q_res[2]
     return name, lat, lon
