@@ -227,7 +227,7 @@ def scrape_quests(config):
         
         quest_goal = quest_task
         quest_list.append({"pokestop": pokestop, "reward": reward, "goal": quest_goal})
-    quest_list = sorted(quest_list, key=lambda k: k["reward"]) 
+    quest_list = sorted(quest_list, key=lambda k: k["reward"])
     return quest_list
 
 def add_pokestop(pokestop_info, name, lat, lon, api_key, img_path, img_url, pokestop_info_path):
@@ -262,7 +262,7 @@ def scrape_invasions(config, pokestop_info):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT name, incident_expiration, latitude, longitude, incident_grunt_type FROM pokestop WHERE incident_start IS NOT null;"
+    query = "SELECT name, incident_expiration, latitude, longitude, incident_grunt_type FROM pokestop WHERE incident_start IS NOT null AND name IS NOT null;"
     cursor.execute(query)
     current_time = dt.now()
     current_time_int = int(time.time())
@@ -366,4 +366,5 @@ if __name__ == "__main__":
     with open(tr_spy_config_path) as data_file:    
         tr_spy_config = json.load(data_file)
     
-    scrape_invasions(tr_spy_config)
+    #scrape_invasions(tr_spy_config)
+    scrape_quests(tr_spy_config)
