@@ -59,6 +59,7 @@ class UnownBot():
         self.bolota_user_str = self.tr_spy_config["bolota_user_str"]
         self.bolota_id = self.tr_spy_config["bolota_id"]
         self.unown_bot_id = self.tr_spy_config["unown_id"]
+        self.owner_id = self.tr_spy_config["owner_id"]
         self.pogo_events_fp = self.tr_spy_config["pogo_events"]
         self.active_quests_channel_id = self.tr_spy_config["active_quests_channel_id"]
         self.report_quests_channel_id = self.tr_spy_config["report_quests_channel_id"]
@@ -284,6 +285,7 @@ class UnownBot():
     async def check_pokealarms(self):
         async def del_old_spawns(chan, dt_now):
             async for message in chan.history(limit=2000):
+                if message.author.id != self.bot.owner_id:
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
                     if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
