@@ -24,6 +24,7 @@ WARNING_EMOJI = '⚠'
 SIDEBAR_EMBED_COLOR = 0x5c7ce5
 UNOWN_BOT_ID = 475770444889456640
 UNOWN_POKESTOP_ICON = "https://static.pokenavbot.com/imgs/teams/team-unknown-logo-256px.png"
+POKEALARM_ID = 586585547385077781
 
 WELCOME1 = "Olá eu sou o bot Unown. Venho dar-te as boas vindas ao PokeTrainers Lisboa e explicar-te a organização do servidor. O servidor está organizado por regiões de forma a poderes filtrar raids que não te interessam. Para saberes as delimitações exactas de cada região podes consultar o link https://drive.google.com/open?id=1d7-IMaiZCAL8gqEixFt-mxqaMqxjpQXU&usp=sharing. Neste momento ainda não tens acesso a nenhuma das regiões. Para ganhar acesso basta ires ao canal #the-bot-lab e escrever os comandos das regiões onde costumas jogar PoGo:\n\
   `!iam alameda`\
@@ -285,7 +286,7 @@ class UnownBot():
     async def check_pokealarms(self):
         async def del_old_spawns(chan, dt_now):
             async for message in chan.history(limit=2000):
-                if message.author.id != self.bot.owner_id:
+                if message.author.id  == POKEALARM_ID:
                     alarm_date = message.created_at
                     delta = dt_now-alarm_date
                     if ((delta.days*24*60*60) + delta.seconds)/60.0-60 > 60: #created_at is returning one extra hour for some reason
