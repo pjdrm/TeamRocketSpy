@@ -17,7 +17,6 @@ import urllib.request
 import urllib.parse
 from operator import itemgetter
 import sys
-from builtins import True
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -155,13 +154,15 @@ def get_spawns(config):
             to_del_spawns.append(encounter_id)
             continue
         spawns.append({"pokemon_id": pokemon_id, "point": (lat, lon)})
-        
+    
+    '''    
     n_dels = len(to_del_spawns)
     for i, id in enumerate(to_del_spawns):
         print("Deleting spawn %d/%d"%(i, n_dels))
         del_spawns_query = "DELETE FROM pokemon WHERE encounter_id = "+str(encounter_id)+";"
         cursor = cnx.cursor(buffered=True)
         cursor.execute(del_spawns_query)
+    '''
     return spawns
 
 async def report_nest(nest_channel, nest_name, nesting_mon, nest_center, address, time_stamp, region_color):
@@ -193,11 +194,11 @@ def get_mon_black_list(nests):
         c = 0
         for name in nests:
             spawn_counts = nests[name]["spawn_counts"]
-            mon_id1, mon_count = spawn_counts[0]
-            mon_id2, mon_count = spawn_counts[1]
-            if mon_id1 == mon_id or mon_id2 == mon_id:
-                c += 1.0
-        if c/n_nests >= 0.8:
+            for mon_id_n, mon_count in spawn_counts:
+                if mon_id_n == mon_id:
+                    c += 1.0
+                    break
+        if c/n_nests >= 0.6:
             return True
         else:
             return False
@@ -207,13 +208,13 @@ def get_mon_black_list(nests):
         mon_id, mon_count = nests[name]["spawn_counts"][0]
         mon_name = POKE_INFO[str(mon_id)]["name"]
         mon_black_l_cands.append(mon_id)
-    
+    print(mon_black_l_cands)
     mon_black_list = []
     for mon_id in mon_black_l_cands:
         if is_event_mon(mon_id, nests):
             mon_name = POKE_INFO[str(mon_id)]["name"]
             mon_black_list.append(mon_name)
-    return mon_black_list
+    return list(set(mon_black_list))
     
 def is_nest_migration(current_nests, new_nests):
     same_mon_count = 0
