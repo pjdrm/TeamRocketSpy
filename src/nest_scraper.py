@@ -17,6 +17,7 @@ import urllib.request
 import urllib.parse
 from operator import itemgetter
 import sys
+from builtins import True
 
 def load_geofences(tr_cfg):
     nest_config_path = tr_spy_config["nest_config_path"]
@@ -82,14 +83,11 @@ def find_geofence(geofences, point):
             return geofence
     return None
 
-def find_nesting_mon(spawns, nest_name, black_mon_list):
-    spawn_counts = Counter(spawns)
-    ordered_spawn_counts = spawn_counts.most_common(5)
-    ordered_spawn_counts.reverse()
+def find_nesting_mon(spawn_counts, nest_name, black_mon_list):
     nest_mon = None
     low_count_flag = None
     print("Finding nesting species for %s" % nest_name)
-    for mon_id, mon_count in ordered_spawn_counts:
+    for mon_id, mon_count in spawn_counts:
         mon_name = POKE_INFO[str(mon_id)]["name"]
         print("species: %s count: %d"%(mon_name, mon_count))
         if mon_name not in black_mon_list:
@@ -188,6 +186,34 @@ async def get_current_nests(nest_channel):
             nest_name = message.embeds[0].title.replace("Directions to ", "")
             current_nests[nest_name] = pokemon
     return current_nests
+
+def get_mon_black_list(nests):
+    def is_event_mon(mon_id, nests):
+        n_nests = len(nests)
+        c = 0
+        for name in nests:
+            spawn_counts = nests[name]["spawn_counts"]
+            mon_id1, mon_count = spawn_counts[0]
+            mon_id2, mon_count = spawn_counts[1]
+            if mon_id1 == mon_id or mon_id2 == mon_id:
+                c += 1.0
+        if c/n_nests >= 0.8:
+            return True
+        else:
+            return False
+        
+    mon_black_l_cands = []
+    for name in nests:
+        mon_id, mon_count = nests[name]["spawn_counts"][0]
+        mon_name = POKE_INFO[str(mon_id)]["name"]
+        mon_black_l_cands.append(mon_id)
+    
+    mon_black_list = []
+    for mon_id in mon_black_l_cands:
+        if is_event_mon(mon_id, nests):
+            mon_name = POKE_INFO[str(mon_id)]["name"]
+            mon_black_list.append(mon_name)
+    return mon_black_list
     
 def is_nest_migration(current_nests, new_nests):
     same_mon_count = 0
@@ -209,13 +235,27 @@ def find_nests(tr_spy_config, report_nest_flag):
     GEOFENCES = load_geofences(tr_spy_config)
     spawns = get_spawns(tr_spy_config)
     nests = assign_spawns(GEOFENCES, spawns)
+    
     for name in nests:
-        nestig_mon = find_nesting_mon(nests[name]["spawns"], name, mon_black_list)
+        nest_spawns = nests[name]["spawns"]
+        spawn_counts = Counter(nest_spawns)
+        ordered_spawn_counts = spawn_counts.most_common(5)
+        ordered_spawn_counts.reverse()
+        nests[name]["spawn_counts"] = ordered_spawn_counts
+        
+    mon_black_list = get_mon_black_list(nests)
+    for name in nests:
+        nestig_mon = find_nesting_mon(nests[name]["spawn_counts"],
+                                      name,
+                                      mon_black_list)
         if nestig_mon is not None:
             print("%s is a %s nest"%(name, nestig_mon))
-            FOUND_NESTS.append([name, nestig_mon, nests[name]["center"], nests[name]["address"], nests[name]["color"]])
+            FOUND_NESTS.append([name, nestig_mon,
+                                nests[name]["center"],
+                                nests[name]["address"],
+                                nests[name]["color"]])
         print("-----------------")
-        
+    print("Black mon list: %s"%(str(mon_black_list)))    
     #FOUND_NESTS = [["Alameda", "numel", [38.7372004,-9.1317359], "Av. Alm. Reis 186, 1900-221 Lisboa"], "#FF5252"]
     NEST_CHANNEL_ID = tr_spy_config["nest_channel_id"]
     if report_nest_flag == 1:
