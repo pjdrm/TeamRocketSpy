@@ -152,17 +152,19 @@ def scrape_raids(config):
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor(buffered=True)
     
-    query = "SELECT gym_id, level, pokemon_id, spawn, start, end, move_1, move_2 FROM raid"
+    query = "SELECT gym_id, level, pokemon_id, form, spawn, start, end, move_1, move_2 FROM raid"
     cursor.execute(query)
     
     raid_list = []
     
-    for (gym_id, level, pokemon_id, spawn, start, end, move_1, move_2) in cursor:
-        start = start+timedelta(hours=1) #MAJOR HACK: fix this in MAD
+    for (gym_id, level, pokemon_id, form, spawn, start, end, move_1, move_2) in cursor:
         hatched = False
         boss = None
         if pokemon_id is not None:
-            boss = POKE_INFO[str(pokemon_id)]["name"].replace("Alolan ", "")
+            info = POKE_INFO[str(pokemon_id)]
+            if "name" not in info:
+                info = POKE_INFO[str(pokemon_id)][str(form)]
+            boss = info["name"].replace("Alolan ", "")
             hatched = True
             
         gym_name = get_gym_name(gym_id, cnx)
@@ -173,7 +175,7 @@ def scrape_raids(config):
             if not found_gym:
                 continue
             
-        spawn = start.strftime('%H:%M')
+        spawn = spawn.strftime('%H:%M')
         raid_dict = {'level': str(level), 
                      'boss': boss, 
                      'spawn': spawn,
