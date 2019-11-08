@@ -53,16 +53,14 @@ def get_pokestop_name(guid, cnx):
     lon = q_res[2]
     return name, lat, lon
 
-def is_present_raid(raid_info):
+def is_present_raid(raid_starts_in):
     raid_end_time = None
-    if raid_info["raid_starts_in"] is not None:
-        raid_end_time = raid_info["raid_starts_in"]
+    if raid_starts_in is not None:
+        raid_end_time = raid_starts_in
         raid_time_obj = dt.strptime(raid_end_time, '%H:%M')
         raid_dur = timedelta(minutes=45)
         raid_time_obj = raid_time_obj + raid_dur
         raid_end_time = raid_time_obj.strftime("%H:%M")
-    elif raid_info["raid_ends_in"] is not None:
-        raid_end_time = raid_info["raid_ends_in"]
     else:
         return None #TODO: handle only having meet time case
     
@@ -158,6 +156,7 @@ def scrape_raids(config):
     raid_list = []
     
     for (gym_id, level, pokemon_id, form, spawn, start, end, move_1, move_2) in cursor:
+        spawn = spawn+timedelta(hours=1) #MAJOR HACK: fix this in MAD
         hatched = False
         boss = None
         if pokemon_id is not None:
@@ -183,7 +182,7 @@ def scrape_raids(config):
                      'hatched': hatched}
         if pokemon_id is not None:
             raid_dict["move_set"] = [MOVE_DICT[move_1], MOVE_DICT[move_2], team]
-        if is_present_raid(raid_dict):
+        if is_present_raid(start.strftime('%H:%M')):
             raid_list.append(raid_dict)
         
     cnx.close()
@@ -210,7 +209,7 @@ def scrape_quests(config):
         quest_timestamp = datetime.datetime.fromtimestamp(quest_timestamp).strftime("%Y-%m-%d")
         current_timestamp =dt.now().strftime("%Y-%m-%d")
         if quest_timestamp != current_timestamp:
-            print("Filtering old quest from %s" % quest_timestamp)
+            #print("Filtering old quest from %s" % quest_timestamp)
             continue
         
         if quest_pokemon_id != 0:
