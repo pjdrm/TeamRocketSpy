@@ -335,7 +335,7 @@ class UnownBot():
             raid_info["level"] = raid_embed["title"].split("Level ")[1].split(" ")[0]
             raid_info["hatched"] = True
         else:
-            raid_info["raid_starts_in"] = desc_split[1].split("hours ")[1].split(" min")[0] #TODO: use absolute times
+            raid_info["spawn"] = desc_split[1].split("hours ")[1].split(" min")[0] #TODO: use absolute times
             raid_info["level"] = raid_embed["title"].split("Level ")[1].split(" ")[0]
             raid_info["hatched"] = False
             
@@ -398,8 +398,8 @@ class UnownBot():
             gym_channel = self.get_gym_channel(raid_channel_name)
             raid_info = self.issued_raids[raid_channel_name]
             #Sometimes we dont know when egg hatches
-            if raid_info["raid_starts_in"] is not None:
-                time_command = "!hatch " + raid_info["raid_starts_in"]
+            if raid_info["spawn"] is not None:
+                time_command = "!hatch " + raid_info["spawn"]
                 await gym_channel.send(time_command, delete_after=2)
             else:
                 self.no_time_end_raids.append(gym_channel)
@@ -485,7 +485,7 @@ class UnownBot():
                 print("Setting time for raid %s"%raid_channel_name)
                 gym_channel = self.get_gym_channel(raid_channel_name)
                 time.sleep(10)
-                await gym_channel.send("!hatch " + raid_info["raid_starts_in"])
+                await gym_channel.send("!hatch " + raid_info["spawn"])
                 self.no_time_end_raids.pop(raid_channel_name)
             
         if is_active_raid and raid_info["hatched"]:

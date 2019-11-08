@@ -173,10 +173,10 @@ def scrape_raids(config):
             if not found_gym:
                 continue
             
-        raid_starts_in = start.strftime('%H:%M')
+        spawn = start.strftime('%H:%M')
         raid_dict = {'level': str(level), 
                      'boss': boss, 
-                     'raid_starts_in': raid_starts_in,
+                     'spawn': spawn,
                      'gym_name': gym_name,
                      'hatched': hatched}
         if pokemon_id is not None:
