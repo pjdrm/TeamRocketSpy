@@ -353,7 +353,11 @@ GRUNT_TYPE_DICT = {4: 'Random',
                    36: 'Rock',
                    37: 'Rock',
                    38: 'Water',
-                   39: 'Water'}
+                   39: 'Water',
+                   47: 'Ghost',
+                   48: 'Ghost',
+                   49: 'Electric',
+                   50: 'Electric'}
         
 with open("./config/proto_items.json") as data_file:    
     ITEMS_DICT = json.load(data_file)
